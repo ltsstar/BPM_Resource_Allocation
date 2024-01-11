@@ -12,6 +12,7 @@ scikit-learn = "==1.0.2"
 hungarian-algorithm = "*"
 jupyter = "*"
 ortools = "*"
+matplotlib = "*"
 
 [dev-packages]
 
