@@ -15,6 +15,7 @@ ortools = "*"
 matplotlib = "*"
 
 [dev-packages]
+ipykernel = "*"
 
 [requires]
 python_version = "3.10"

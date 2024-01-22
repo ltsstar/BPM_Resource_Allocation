@@ -1,7 +1,7 @@
 from enum import Enum, auto
 from datetime import datetime, timedelta
 import random
-from problems import MinedProblem
+from .problems import MinedProblem
 
 RUNNING_TIME = 24 * 365
 
@@ -64,7 +64,7 @@ class SimulationEvent:
 
 
 class Simulator:
-	def __init__(self, planner, instance_file="BPI Challenge 2017 - instance.pickle"):
+	def __init__(self, planner, instance_file="./data/BPI Challenge 2017 - instance.pickle"):
 		self.events = []
 		self.unassigned_tasks = dict()
 		self.assigned_tasks = dict()

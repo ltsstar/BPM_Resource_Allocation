@@ -2,7 +2,7 @@ import random
 import pickle
 from math import factorial
 from abc import ABC, abstractmethod
-
+import sys
 
 class Task:
     def __init__(self, task_id, case_id, task_type):
@@ -63,6 +63,7 @@ class Problem(ABC):
 
     @classmethod
     def from_file(cls, filename):
+        sys.path.append('simulator')
         with open(filename, 'rb') as handle:
             instance = pickle.load(handle)
         return instance
