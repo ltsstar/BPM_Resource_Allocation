@@ -5,7 +5,7 @@ from task_execution_time import ExecutionTimeModel
 
 prediction_model = ExecutionTimeModel()
 warm_up_policy = RandomPolicy()
-warm_up_time =  1000000
+warm_up_time =  23*365/4
 policy = RandomPolicy()
 my_planner = Planner(prediction_model, warm_up_policy, warm_up_time, policy)
 

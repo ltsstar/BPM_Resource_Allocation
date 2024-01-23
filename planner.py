@@ -13,8 +13,8 @@ class Planner:
                  warm_up_policy, warm_up_time,
                  policy):
         self.task_started, \
-            self.task_resource_duration, \
-            self.task_type_occurrences = 3*[dict()]
+            self.task_type_occurrences = 2*[dict()]
+        self.task_resource_duration = dict()
         self.current_time, self.warm_up_time = 0, warm_up_time
         self.is_warm_up = True
         self.warm_up_policy, self.policy = warm_up_policy, policy
