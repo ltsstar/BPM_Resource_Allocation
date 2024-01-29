@@ -1,12 +1,13 @@
 from simulator.simulator import Simulator
 from planner import Planner
-from policy import RandomPolicy
+from policy import *
 from task_execution_time import ExecutionTimeModel
 
 prediction_model = ExecutionTimeModel()
 warm_up_policy = RandomPolicy()
-warm_up_time =  23*365/4
+warm_up_time =  24
 policy = RandomPolicy()
+policy = HungarianPolicy()
 my_planner = Planner(prediction_model, warm_up_policy, warm_up_time, policy)
 
 simulator = Simulator(my_planner)
