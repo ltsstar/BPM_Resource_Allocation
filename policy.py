@@ -7,6 +7,16 @@ class Policy:
     def allocate(self, trd):
         pass
 
+    def prune_invalid_assignments(self, theoretical_assignments, available_resources, resource_pool, unassigned_tasks):
+        assignments = []
+        for task, resource in theoretical_assignments:
+            if resource in available_resources and task in unassigned_tasks and \
+                resource in resource_pool[task.task_type]:
+                assignments.append((task, resource))
+                available_resources.remove(resource)
+                unassigned_tasks.remove(task)
+        return assignments
+
 
 class RandomPolicy(Policy):
     def allocate(self, unassigned_tasks, available_resources, resource_pool, trd):
@@ -52,21 +62,21 @@ class HungarianPolicy(Policy):
                 tr = index_taskresources[(row, col)]
             selected.append(tr)
         
-        return selected
+        return self.prune_invalid_assignments(selected, available_resources, resource_pool, unassigned_tasks)
     
 
 class GreedyParallelMachinesSchedulingPolicy(Policy):
     def get_task_data_from_trd(self, trd, factor=3600):
         resources_dict, task_dict = dict(), dict()
         task_data = []
-        for task_id, (task, resources) in enumerate(trd.items()):
-            task_dict[task] = task_id
-            for resource, duration in resources.items():
-                if resource not in resources_dict:
-                    resources_dict[resource] = len(resources_dict)
-                task_data.append(
-                    (task_id, resources_dict[resource], int(duration*factor))
-                )
+        for ((task, resource), duration) in trd.items():
+            if task not in task_dict:
+                task_dict[task] = len(task_dict)
+            if resource not in resources_dict:
+                resources_dict[resource] = len(resources_dict)
+            task_data.append(
+                (task_dict[task], resources_dict[resource], int(duration*factor))
+            )
         return (task_data, task_dict, resources_dict)
 
 
@@ -106,4 +116,4 @@ class GreedyParallelMachinesSchedulingPolicy(Policy):
             resource = swaped_resources_dict[resource]
             selected.append([task, resource])
 
-        return selected
+        return self.prune_invalid_assignments(selected, available_resources, resource_pool, unassigned_tasks)

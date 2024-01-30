@@ -13,9 +13,12 @@ hungarian-algorithm = "*"
 jupyter = "*"
 ortools = "*"
 matplotlib = "*"
+tensorflow = "*"
+keras = "*"
 
 [dev-packages]
 ipykernel = "*"
+pandas = "*"
 
 [requires]
 python_version = "3.10"

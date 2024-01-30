@@ -3,6 +3,7 @@ import pandas
 import datetime
 import collections
 import task_execution_time
+import time
 
 class Planner:
     activity_names = ['W_Complete application', 'W_Call after offers', 'W_Validate application', 'W_Call incomplete files', 'W_Handle leads', 'W_Assess potential fraud', 'W_Shortened completion']
@@ -12,8 +13,8 @@ class Planner:
     def __init__(self, prediction_model,
                  warm_up_policy, warm_up_time,
                  policy):
-        self.task_started, \
-            self.task_type_occurrences = 2*[dict()]
+        self.task_started = dict()
+        self.task_type_occurrences = dict()
         self.task_resource_duration = dict()
         self.current_time, self.warm_up_time = 0, warm_up_time
         self.is_warm_up = True
@@ -21,6 +22,7 @@ class Planner:
         self.resources = None
         self.predictor = task_execution_time.TaskExecutionPrediction(prediction_model)
         self.working_resources = {}
+        self.last_time = time.time()
 
     def current_time_str(self):
         return (self.initial_time + datetime.timedelta(hours=self.current_time)).strftime(self.time_format)
@@ -49,9 +51,12 @@ class Planner:
         return assignments
 
     def report(self, event):
+        if int(event.timestamp / 24) > int(self.current_time / 24):
+            print(self.current_time_str(), time.time() - self.last_time)
+            self.last_time = time.time()
         self.current_time = event.timestamp
 
-        if self.current_time > self.warm_up_time:
+        if self.is_warm_up and self.current_time > self.warm_up_time:
             self.predictor.train(self.resources, self.task_resource_duration, self.task_type_occurrences)
             self.is_warm_up = False
 
