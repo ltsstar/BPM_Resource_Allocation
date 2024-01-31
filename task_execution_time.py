@@ -62,7 +62,7 @@ class ExecutionTimeModel:
 
     def _hash_data(self, task, resource, number_task_type_occurrences):
         return hash(task.task_type) + hash(frozenset(task.data.items())) \
-            + hash(resource) + hash(frozenset(number_task_type_occurrences[task.case_id].items()))
+            + hash(resource) + hash(frozenset(number_task_type_occurrences.items()))
 
     def train(self, resources, task_resource_durations, task_type_occurrences):
         train_df = self.__generate_train_df(task_resource_durations, task_type_occurrences)
@@ -107,7 +107,7 @@ class ExecutionTimeModel:
                                     'Activity', 'Resource', 'y'])
         df = df.set_index(['T', 'R'])
         for task, resource in itertools.product(unassigned_tasks, all_resources):
-            hashed_data = self._hash_data(task, resource, task_type_occurrences)
+            hashed_data = self._hash_data(task, resource, task_type_occurrences[task.case_id])
             if hashed_data in self.predict_cache[task.case_id]:
                 df.loc[(task, resource),:] = {
                             **task_type_occurrences[task.case_id], 

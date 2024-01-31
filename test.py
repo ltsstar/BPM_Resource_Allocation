@@ -10,8 +10,8 @@ warm_up_time =  24
 policy = HungarianPolicy()
 policy = GreedyParallelMachinesSchedulingPolicy()
 my_planner = Planner(prediction_model, warm_up_policy, warm_up_time, policy,
-                     predict_multiple=True)
+                     predict_multiple=False)
 
 simulator = Simulator(my_planner)
-result = simulator.run(2*24*365)
+result = simulator.run(3*24)
 print(result)
