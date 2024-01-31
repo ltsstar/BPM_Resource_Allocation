@@ -1,7 +1,6 @@
 from simulator.simulator import EventType
 import pandas
 import datetime
-import collections
 import task_execution_time
 import time
 
@@ -12,7 +11,8 @@ class Planner:
 
     def __init__(self, prediction_model,
                  warm_up_policy, warm_up_time,
-                 policy):
+                 policy,
+                 predict_multiple = False):
         self.task_started = dict()
         self.task_type_occurrences = dict()
         self.task_resource_duration = dict()
@@ -20,7 +20,8 @@ class Planner:
         self.is_warm_up = True
         self.warm_up_policy, self.policy = warm_up_policy, policy
         self.resources = None
-        self.predictor = task_execution_time.TaskExecutionPrediction(prediction_model)
+        self.predictor = task_execution_time.TaskExecutionPrediction(prediction_model,
+                                                                     predict_multiple_enabled=predict_multiple)
         self.working_resources = {}
         self.last_time = time.time()
 

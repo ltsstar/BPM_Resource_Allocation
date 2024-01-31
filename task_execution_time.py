@@ -19,7 +19,7 @@ class ExecutionTimeModel:
 
         self._model = None
         self.trained = False
-        self.predict_cache = dict()
+        self.predict_cache = collections.defaultdict(dict)
 
     def __generate_train_df(self, task_resource_durations, task_type_occurrences):
         feature_list = []
@@ -60,9 +60,9 @@ class ExecutionTimeModel:
 
         return x,y
 
-    def _hash_data(self, task_type, task_data, resource, number_task_type_occurrences):
-        return hash(task_type) + hash(frozenset(task_data.items())) \
-            + hash(resource) + hash(frozenset(task_data.items()))
+    def _hash_data(self, task, resource, number_task_type_occurrences):
+        return hash(task.task_type) + hash(frozenset(task.data.items())) \
+            + hash(resource) + hash(frozenset(number_task_type_occurrences[task.case_id].items()))
 
     def train(self, resources, task_resource_durations, task_type_occurrences):
         train_df = self.__generate_train_df(task_resource_durations, task_type_occurrences)
@@ -85,28 +85,52 @@ class ExecutionTimeModel:
         self._model.fit(x_train, y_train, epochs=300, batch_size=256, validation_data=(x_val, y_val),
                         verbose=1)
         self.trained = True
-        self.predict_cache = dict()
+        self.predict_cache.clear()
 
-    def predict(self, task_type, task_data, resource, number_task_type_occurrences):
-        hashed_data = self._hash_data(task_type, task_data, resource, number_task_type_occurrences)
-        if hashed_data in self.predict_cache:
-            return self.predict_cache[hashed_data]
-        
-        features = {**number_task_type_occurrences, 'Activity': task_type, 'Resource': resource, **task_data}
+    def predict(self, task, resource, number_task_type_occurrences):
+        hashed_data = self._hash_data(task, resource, number_task_type_occurrences)
+        if hashed_data in self.predict_cache[task.case_id]:
+            return self.predict_cache[task.case_id][hashed_data]
+
+        features = {**number_task_type_occurrences, 'Activity': task.task_type, 'Resource': resource, **task.data}
         data = pd.DataFrame(features, index=[1])
 
         x = np.concatenate(self._transform_data(data), axis=1)
         pred = self._model.predict(x, verbose=0)[0]
         res = max(0, pred)
 
-        self.predict_cache[hashed_data] = res
+        self.predict_cache[task.case_id][hashed_data] = res
         return res
     
-    def predict_multiple(self, data):
-        x = np.concatenate(self._transform_data(data.loc[:, ~data.columns.isin(['T', 'R'])]), axis=1)
+    def predict_multiple(self, unassigned_tasks, all_resources, task_type_occurrences):
+        df = pd.DataFrame(columns = ['T', 'R', *self._rest_columns, *unassigned_tasks[0].data, 
+                                    'Activity', 'Resource', 'y'])
+        df = df.set_index(['T', 'R'])
+        for task, resource in itertools.product(unassigned_tasks, all_resources):
+            hashed_data = self._hash_data(task, resource, task_type_occurrences)
+            if hashed_data in self.predict_cache[task.case_id]:
+                df.loc[(task, resource),:] = {
+                            **task_type_occurrences[task.case_id], 
+                            'Activity' : task.task_type,
+                            'Resource' : resource,
+                            **task.data,
+                            'y' : self.predict_cache[task.case_id][hashed_data]
+                }
+            else:
+                df.loc[(task, resource),:] = {
+                            **task_type_occurrences[task.case_id], 
+                            'Activity' : task.task_type,
+                            'Resource' : resource,
+                            **task.data,
+                            'y' : 0
+                }
+        
+        x_idx = df.loc[df['y'] == 0].index
+        x = np.concatenate(self._transform_data(df.loc[x_idx]), axis=1)
         pred = self._model.predict(x, verbose=0)
         pred = np.maximum(pred, np.zeros_like(pred))
-        data['y'] = pred
+        df.loc[x_idx, 'y'] = pred
+        return df
 
 
 class TaskExecutionPrediction:
@@ -123,23 +147,10 @@ class TaskExecutionPrediction:
         all_resources = list(working_resources.keys()) + list(available_resources)
 
         if self.predict_multiple_enabled:
-            df = pd.DataFrame(columns = ['T', 'R', *self.model._rest_columns, *unassigned_tasks[0].data, 
-                                        'Activity', 'Resource', 'y'])
-            df = df.set_index(['T', 'R'])
-            for task, resource in itertools.product(unassigned_tasks, all_resources):
-                df.loc[(task, resource),:] = {
-                            **task_type_occurrences[task.case_id], 
-                            'Activity' : task.task_type,
-                            'Resource' : resource,
-                            **task.data,
-                            'y' : 0.0
-                }
-
-            self.model.predict_multiple(df)
+            df = self.model.predict_multiple(unassigned_tasks, all_resources, task_type_occurrences)
             trds = df['y'].to_dict()
         else:
             trds = dict()
             for task, resource in itertools.product(unassigned_tasks, all_resources):
-                trds[(task, resource)] = self.model.predict(task.task_type, task.task_data,
-                                                            resource, task_type_occurrences[task])
+                trds[(task, resource)] = self.model.predict(task, resource, task_type_occurrences[task.case_id])
         return trds
