@@ -13,8 +13,8 @@ hungarian-algorithm = "*"
 jupyter = "*"
 ortools = "*"
 matplotlib = "*"
-tensorflow = "*"
 keras = "*"
+tensorflow = {extras = ["and-cuda"], version = "*"}
 
 [dev-packages]
 ipykernel = "*"
