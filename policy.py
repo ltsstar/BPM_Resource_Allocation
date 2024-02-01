@@ -2,6 +2,7 @@ import numpy as np
 import scipy
 import math
 import collections
+import random
 
 class Policy:
     def allocate(self, trd):
@@ -20,12 +21,15 @@ class Policy:
 
 class RandomPolicy(Policy):
     def allocate(self, unassigned_tasks, available_resources, resource_pool, trd):
+        random.shuffle(unassigned_tasks)
+        it_resources = list(available_resources)
+        random.shuffle(it_resources)
         assignments = []
         # assign the first unassigned task to the first available resource, the second task to the second resource, etc.
         for task in unassigned_tasks:
-            for resource in available_resources:
+            for resource in it_resources:
                 if resource in resource_pool[task.task_type]:
-                    available_resources.remove(resource)
+                    it_resources.remove(resource)
                     assignments.append((task, resource))
                     break
         return assignments
