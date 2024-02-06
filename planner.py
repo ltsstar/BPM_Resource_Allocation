@@ -3,6 +3,9 @@ import pandas
 import datetime
 import task_execution_time
 import time
+from pympler.tracker import SummaryTracker
+
+TRACKER = SummaryTracker()
 
 class Planner:
     activity_names = ['W_Complete application', 'W_Call after offers', 'W_Validate application', 'W_Call incomplete files', 'W_Handle leads', 'W_Assess potential fraud', 'W_Shortened completion']
@@ -59,6 +62,7 @@ class Planner:
         if int(event.timestamp) > int(self.current_time):
             print(self.current_time_str(), time.time() - self.last_time, len(self.task_queue), len(self.working_resources))
             self.last_time = time.time()
+            TRACKER.print_diff()
         self.current_time = event.timestamp
 
         if self.is_warm_up and self.current_time > self.warm_up_time:
@@ -82,7 +86,8 @@ class Planner:
 
         elif event.lifecycle_state == EventType.COMPLETE_TASK:
             duration = event.timestamp - self.task_started[event.task]
-            self.task_resource_duration[(event.task, event.resource)] = duration
+            if self.is_warm_up:
+                self.task_resource_duration[(event.task, event.resource)] = duration
             del self.working_resources[event.resource]
             self.task_queue.pop(event.task)
             self.complete_task(event)
