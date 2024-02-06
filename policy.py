@@ -5,6 +5,20 @@ import collections
 import random
 
 class Policy:
+    def get_task_data_from_trd(self, trd, factor=3600):
+        resources_dict, task_dict = dict(), dict()
+        task_data = []
+        for ((task, resource), duration) in trd.items():
+            if task not in task_dict:
+                task_dict[task] = len(task_dict)
+            if resource not in resources_dict:
+                resources_dict[resource] = len(resources_dict)
+            task_data.append(
+                (task_dict[task], resources_dict[resource], int(duration*factor))
+            )
+        return (task_data, task_dict, resources_dict)
+
+
     def allocate(self, trd):
         pass
 
@@ -37,53 +51,23 @@ class RandomPolicy(Policy):
 
 class HungarianPolicy(Policy):
     def allocate(self, unassigned_tasks, available_resources, resource_pool, trd):
-        i, j, k = (0, 0, 0)
-        task_indices, resource_indices = {}, {}
-        index_taskresources = {}
-        for task, resources in trd.items():
-            task_indices[task] = i
-            for resource, duration in resources.items():
-                if resource not in resource_indices:
-                    resource_indices[resource] = j
-                    j += 1
-                index_taskresources[(resource_indices[resource],i)] = (task, resource)
-            i += 1
+        task_data, task_encoding, resource_encoding = self.get_task_data_from_trd(trd)
+        swaped_tasks_dict = {v : k for k, v in task_encoding.items()}
+        swaped_resources_dict = {v : k for k, v in resource_encoding.items()}
 
-        mat = np.full((j,i), np.inf, dtype=np.dtype("float32"))
-        for task, resources in trd.items():
-            for resource, duration in resources.items():
-                mat[resource_indices[resource]][task_indices[task]] = duration
+        task_np = np.zeros((len(swaped_tasks_dict), len(swaped_resources_dict)))
+        for x, y, v in task_data:
+            task_np[x,y] = v
 
-        row_ind, col_ind = scipy.optimize.linear_sum_assignment(mat)
+        task_ind, resource_ind = scipy.optimize.linear_sum_assignment(task_np)
         selected = []
-        for row, col in zip(row_ind, col_ind):
-            if mat[row][col] == np.inf:
-                if mat[row].argmin() != np.inf:
-                    tr = index_taskresources[(row, mat[row].argmin())]
-                else:
-                    continue
-            else:
-                tr = index_taskresources[(row, col)]
-            selected.append(tr)
-        
+        for task_i, resource_i in zip(task_ind, resource_ind):
+            selected.append((swaped_tasks_dict[task_i], swaped_resources_dict[resource_i]))
+
         return self.prune_invalid_assignments(selected, available_resources, resource_pool, unassigned_tasks)
     
 
 class GreedyParallelMachinesSchedulingPolicy(Policy):
-    def get_task_data_from_trd(self, trd, factor=3600):
-        resources_dict, task_dict = dict(), dict()
-        task_data = []
-        for ((task, resource), duration) in trd.items():
-            if task not in task_dict:
-                task_dict[task] = len(task_dict)
-            if resource not in resources_dict:
-                resources_dict[resource] = len(resources_dict)
-            task_data.append(
-                (task_dict[task], resources_dict[resource], int(duration*factor))
-            )
-        return (task_data, task_dict, resources_dict)
-
-
     def greedy_policy(self, task_data):
         max_task = max([task[0] for task in task_data])
         max_resources = max([task[1] for task in task_data])

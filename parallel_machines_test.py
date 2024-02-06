@@ -19,7 +19,5 @@ my_planner = Planner(prediction_model, warm_up_policy, warm_up_time, policy,
 simulator = Simulator(my_planner)
 result = simulator.run(simulation_time)
 
-with open('prediction_model.pkl', 'wb') as file:
-    pickle.dump(prediction_model, file)
 
 print(result)

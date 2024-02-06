@@ -26,6 +26,9 @@ class Planner:
         self.task_queue = dict()
         self.last_time = time.time()
 
+        if self.warm_up_time == 0:
+            self.is_warm_up = False
+
     def current_time_str(self):
         return (self.initial_time + datetime.timedelta(hours=self.current_time)).strftime(self.time_format)
 
