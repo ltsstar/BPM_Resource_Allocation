@@ -13,7 +13,7 @@ class UnrelatedMachinesScheduling:
         self.__define_constraints()
         self.__define_objective()
 
-    def __define_model(self, max_value):
+    def __define_model(self, max_value, greedy_max=True):
         self.model = cp_model.CpModel()
         # Named tuple to store information about created variables.
         self.task_type = collections.namedtuple("task_type", "start end interval assigned")
@@ -25,9 +25,28 @@ class UnrelatedMachinesScheduling:
         self.goal_variables = collections.defaultdict(list)
         if max_value:
             self.horizon = self.__get_horizon()[0], max_value
+        elif greedy_max:
+            self.horizon = self.__get_horizon()[0], self.__get_greedy_max()
         else:
             self.horizon = self.__get_horizon()
         #print(self.horizon)
+            
+    def __get_greedy_max(self):
+        task_resource_durations = collections.defaultdict(list)
+        for task, resource, duration in self.task_data:
+            task_resource_durations[task].append((resource, duration))
+
+        resource_times = collections.defaultdict(int)
+        for task, resource_durations in task_resource_durations.items():
+            min_max_time = math.inf
+            selected_resource = None
+            for resource, duration in resource_durations:
+                if resource_times[resource] + duration < min_max_time:
+                    selected_resource = resource
+                    min_max_time = resource_times[resource] + duration
+            resource_times[selected_resource] = min_max_time
+        
+        return max(resource_times.values())
 
     def __get_horizon(self):
         max_task = max([task[0] for task in self.task_data])
@@ -120,6 +139,9 @@ class UnrelatedMachinesScheduling:
 
 class UnrelatedParallelMachinesSchedulingPolicy(Policy):
     def allocate(self, unassigned_tasks, available_resources, resource_pool, trd):
+        trd = self.prune_trd(trd, resource_pool)
+        if not trd:
+            return []
         task_data, task_encoding, resource_encoding = self.get_task_data_from_trd(trd)
 
         # Creates the solver and solve.
@@ -138,9 +160,11 @@ class UnrelatedParallelMachinesSchedulingPolicy(Policy):
 
         if status != cp_model.OPTIMAL:
             if status == cp_model.FEASIBLE:
-                print('Feasible', int(end_time - start_time), len(unassigned_tasks), int(len(trd)/len(unassigned_tasks)))
+                print('Feasible', int(end_time - start_time), len(unassigned_tasks), int(len(trd)/len(unassigned_tasks)),
+                      solver.ObjectiveValue(), model.horizon)
             else:
-                print('No solution', int(end_time - start_time), len(unassigned_tasks), int(len(trd)/len(unassigned_tasks)))
+                print('No solution', int(end_time - start_time), len(unassigned_tasks), int(len(trd)/len(unassigned_tasks)),
+                      model.horizon)
 
         swaped_tasks_dict = {v : k for k, v in task_encoding.items()}
         swaped_resources_dict = {v : k for k, v in resource_encoding.items()}

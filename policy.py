@@ -32,6 +32,13 @@ class Policy:
                 unassigned_tasks.remove(task)
         return assignments
 
+    def prune_trd(self, trd, resource_pool):
+        pruned_trd = dict()
+        for (task, resource), duration in trd.items():
+            if resource in resource_pool[task.task_type]:
+                pruned_trd[(task, resource)] = duration
+        return pruned_trd
+
 
 class RandomPolicy(Policy):
     def allocate(self, unassigned_tasks, available_resources, resource_pool, trd):
@@ -97,6 +104,7 @@ class FastestResourceFirst(Policy):
 
 class HungarianPolicy(Policy):
     def allocate(self, unassigned_tasks, available_resources, resource_pool, trd):
+        #trd = self.prune_trd(trd, resource_pool)
         task_data, task_encoding, resource_encoding = self.get_task_data_from_trd(trd)
         swaped_tasks_dict = {v : k for k, v in task_encoding.items()}
         swaped_resources_dict = {v : k for k, v in resource_encoding.items()}
