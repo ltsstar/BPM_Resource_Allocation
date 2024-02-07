@@ -96,7 +96,8 @@ class Planner:
 
         elif event.lifecycle_state == EventType.COMPLETE_CASE:
             self.task_type_occurrences.pop(event.case_id)
-            self.prediction_model.delete_case_from_cache(event.case_id)
+            if not self.is_warm_up:
+                self.prediction_model.delete_case_from_cache(event.case_id)
             self.complete_case(event)
 
     def case_arival(self, event):

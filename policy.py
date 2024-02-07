@@ -47,7 +47,53 @@ class RandomPolicy(Policy):
                     assignments.append((task, resource))
                     break
         return assignments
-    
+
+class FastestTaskFirst(Policy):
+    def allocate(self, unassigned_tasks, available_resources, resource_pool, trd):
+        task_runtimes = collections.defaultdict(list)
+        for ((task, resource), duration) in trd.items():
+            if resource in resource_pool[task.task_type] and \
+                resource in available_resources and \
+                task in unassigned_tasks:
+                task_runtimes[task].append((resource, duration))
+        
+        sorted_task_runtimes = collections.defaultdict(list)
+        for task, task_runtime in task_runtimes.items():
+            sorted_task_runtimes[task] = sorted(task_runtime, key=lambda x : x[1])
+
+        assignments = []
+        assigned_resources = []
+        for task, sorted_task_runtime in sorted_task_runtimes.items():
+            for resource, duration in sorted_task_runtime:
+                if resource not in assigned_resources:
+                    assignments.append((task, resource))
+                    assigned_resources.append(resource)
+                    break
+        return assignments
+        
+
+class FastestResourceFirst(Policy):
+    def allocate(self, unassigned_tasks, available_resources, resource_pool, trd):
+        resource_runtimes = collections.defaultdict(list)
+        for ((task, resource), duration) in trd.items():
+            if resource in resource_pool[task.task_type] and \
+                resource in available_resources and \
+                task in unassigned_tasks:
+                resource_runtimes[resource].append((task, duration))
+        
+        sorted_resource_runtimes = collections.defaultdict(list)
+        for resource, resource_runtime in resource_runtimes.items():
+            sorted_resource_runtimes[resource] = sorted(resource_runtime, key=lambda x : x[1])
+
+        assignments = []
+        assigned_tasks = []
+        for resource, sorted_resource_runtime in sorted_resource_runtimes.items():
+            for task, duration in sorted_resource_runtime:
+                if task not in assigned_tasks:
+                    assignments.append((task, resource))
+                    assigned_tasks.append(task)
+                    break
+        return assignments
 
 class HungarianPolicy(Policy):
     def allocate(self, unassigned_tasks, available_resources, resource_pool, trd):
