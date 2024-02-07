@@ -10,7 +10,7 @@ with open('prediction_model.pkl', 'rb') as file:
 
 warm_up_policy = RandomPolicy()
 warm_up_time =  0
-simulation_time = 180*24
+simulation_time = 360*24
 policy = HungarianPolicy()
 
 my_planner = Planner(prediction_model, warm_up_policy, warm_up_time, policy,
