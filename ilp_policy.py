@@ -60,7 +60,7 @@ class UnrelatedMachinesScheduling:
             min_task_duration[t] = min([task[2] if task[0]==t else math.inf for task in self.task_data])
             max_task_duration[t] = max([task[2] if task[0]==t else 0 for task in self.task_data])
         #horizon = max(min_task_duration.values()), sum(min_task_duration.values())+1#, sum(max_task_duration.values())
-        horizon = int(sum(min_task_duration.values())/(max_resource+1)+1), sum(min_task_duration.values())+1
+        horizon = int(sum(min_task_duration.values())/(max_resource+1)), sum(min_task_duration.values())+1
         return horizon
     
     
