@@ -96,7 +96,7 @@ class ExecutionTimeModel:
         data = pd.DataFrame(features, index=[1])
 
         x = np.concatenate(self._transform_data(data), axis=1)
-        pred = self._model.predict(x, verbose=0)[0]
+        pred = self._model(x, training=False)
         res = max(0, pred)
         res = float(res)
 
