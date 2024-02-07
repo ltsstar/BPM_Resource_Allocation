@@ -98,6 +98,7 @@ class ExecutionTimeModel:
         x = np.concatenate(self._transform_data(data), axis=1)
         pred = self._model.predict(x, verbose=0)[0]
         res = max(0, pred)
+        res = float(res)
 
         self.predict_cache[task.case_id][hashed_data] = res
         return res
@@ -131,6 +132,9 @@ class ExecutionTimeModel:
         pred = np.maximum(pred, np.zeros_like(pred))
         df.loc[x_idx, 'y'] = pred
         return df
+    
+    def delete_case_from_cache(self, case_id):
+        self.predict_cache.pop(case_id)
 
 
 class TaskExecutionPrediction:
