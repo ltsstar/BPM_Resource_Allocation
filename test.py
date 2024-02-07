@@ -2,6 +2,7 @@ import pickle
 from simulator.simulator import Simulator
 from planner import Planner
 from policy import *
+from ilp_policy import UnrelatedParallelMachinesSchedulingPolicy
 from task_execution_time import ExecutionTimeModel
 
 prediction_model = ExecutionTimeModel()
@@ -12,7 +13,7 @@ warm_up_policy = RandomPolicy()
 warm_up_time =  0
 simulation_time = 24*365
 
-policy = FastestTaskFirst()
+policy = UnrelatedParallelMachinesSchedulingPolicy()
 my_planner = Planner(prediction_model, warm_up_policy, warm_up_time, policy,
                      predict_multiple=False)
 

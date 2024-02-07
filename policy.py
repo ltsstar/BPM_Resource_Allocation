@@ -19,7 +19,7 @@ class Policy:
         return (task_data, task_dict, resources_dict)
 
 
-    def allocate(self, trd):
+    def allocate(self, unassigned_tasks, available_resources, resource_pool, trd):
         pass
 
     def prune_invalid_assignments(self, theoretical_assignments, available_resources, resource_pool, unassigned_tasks):
