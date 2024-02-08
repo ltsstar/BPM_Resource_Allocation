@@ -101,6 +101,8 @@ class Simulator:
 
 	def run(self, running_time=RUNNING_TIME):
 		while self.now <= running_time:
+			if self.planner.stop:
+				return 0, "Stopped"
 			event = self.events.pop(0)
 			self.now = event[0]
 			event = event[1]

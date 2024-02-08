@@ -18,6 +18,7 @@ class Planner:
                  warm_up_policy, warm_up_time,
                  policy,
                  predict_multiple = False):
+        self.stop = False # Tell simulator to stop
         self.prediction_model = prediction_model
         self.task_started = dict()
         self.task_type_occurrences = dict()
@@ -35,6 +36,9 @@ class Planner:
         self.resources_last_active = collections.defaultdict(float)
         self.resource_active_time = collections.defaultdict(float)
         self.last_available_resources = set()
+        self.total_cycle_time = 0
+        self.case_start = dict()
+        self.cases_completed = 0
 
         if self.warm_up_time == 0:
             self.is_warm_up = False
@@ -65,18 +69,23 @@ class Planner:
             occupations = self.get_resource_occupations()
 
             # Get resource fairnesses
-            fairnesses = self.get_resource_fairness(occupations)
+            fairness = self.get_resource_fairness(occupations)
 
             # Make allocation decision
             assignments = self.policy.allocate(unassigned_tasks,
                                                available_resources,
                                                resource_pool,
-                                               trds)
+                                               trds,
+                                               occupations,
+                                               fairness)
         return assignments
 
     def report(self, event):
         if int(event.timestamp) > int(self.current_time):
-            print(self.current_time_str(), time.time() - self.last_time, len(self.task_queue), len(self.working_resources))
+            time_diff = time.time() - self.last_time
+            #print(self.current_time_str(), time_diff,len(self.task_queue), len(self.working_resources))
+            if time_diff > 100:
+                self.stop = True
             self.last_time = time.time()
             #TRACKER.print_diff()
         self.current_time = event.timestamp
@@ -144,14 +153,26 @@ class Planner:
     
     def get_resource_fairness(self, resource_occupations):
         v = np.array(list(resource_occupations.values()))
-        average_occupation = np.mean(v)
+        average_occupation = np.mean(v) if len(v) else {}
         res = dict()
         for resource, occupation in resource_occupations.items():
             res[resource] = (occupation - average_occupation)**2
         return res
+    
+    def get_current_loss(self):
+        time_loss = self.total_cycle_time
+        for case_start_time in self.case_start.values():
+            time_loss += self.current_time - case_start_time
+        
+        occupations = self.get_resource_occupations()
+        fairness = self.get_resource_fairness(occupations)
+        return (time_loss / self.cases_completed if self.cases_completed else time_loss,
+              sum(occupations.values()) / len(occupations) if len(occupations) else sum(occupations.values()),
+              sum(fairness.values()) / len(fairness) if len(fairness) else sum(fairness.values())
+        )
 
     def case_arival(self, event):
-        pass
+        self.case_start[event.case_id] = self.current_time
 
     def task_activate(self, event):
         pass
@@ -164,4 +185,6 @@ class Planner:
         self.resource_occupation[event.resource] += (event.timestamp - self.working_resources[event.resource][0]) - self.working_resources[event.resource][1]
 
     def complete_case(self, event):
-        pass
+        self.total_cycle_time += self.current_time - self.case_start[event.case_id]
+        del self.case_start[event.case_id]
+        self.cases_completed += 1

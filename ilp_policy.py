@@ -138,7 +138,7 @@ class UnrelatedMachinesScheduling:
 
 
 class UnrelatedParallelMachinesSchedulingPolicy(Policy):
-    def allocate(self, unassigned_tasks, available_resources, resource_pool, trd):
+    def allocate(self, unassigned_tasks, available_resources, resource_pool, trd, occupations, fairness):
         trd = self.prune_trd(trd, resource_pool)
         if not trd:
             return []
