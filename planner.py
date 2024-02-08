@@ -84,7 +84,7 @@ class Planner:
         if int(event.timestamp) > int(self.current_time):
             time_diff = time.time() - self.last_time
             #print(self.current_time_str(), time_diff,len(self.task_queue), len(self.working_resources))
-            if time_diff > 100:
+            if time_diff > 120:
                 self.stop = True
             self.last_time = time.time()
             #TRACKER.print_diff()
@@ -148,7 +148,7 @@ class Planner:
         res = dict()
         for resource, availability in self.resource_active_time.items():
             occupation = self.resource_occupation[resource]
-            res[resource] = occupation / availability
+            res[resource] = occupation / availability if availability else 0
         return res
     
     def get_resource_fairness(self, resource_occupations):
