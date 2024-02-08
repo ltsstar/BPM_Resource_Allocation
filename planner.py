@@ -3,6 +3,8 @@ import pandas
 import datetime
 import task_execution_time
 import time
+import collections
+import numpy as np
 #from pympler.tracker import SummaryTracker
 
 #TRACKER = SummaryTracker()
@@ -29,6 +31,10 @@ class Planner:
         self.working_resources = {}
         self.task_queue = dict()
         self.last_time = time.time()
+        self.resource_occupation = collections.defaultdict(float)
+        self.resources_last_active = collections.defaultdict(float)
+        self.resource_active_time = collections.defaultdict(float)
+        self.last_available_resources = set()
 
         if self.warm_up_time == 0:
             self.is_warm_up = False
@@ -37,6 +43,8 @@ class Planner:
         return (self.initial_time + datetime.timedelta(hours=self.current_time)).strftime(self.time_format)
 
     def plan(self, available_resources, unassigned_tasks, resource_pool):
+        self.resource_update(available_resources, unassigned_tasks, resource_pool)
+
         if not self.resources:
             self.resources = list(set(sum(resource_pool.values(), [])))
 
@@ -52,6 +60,13 @@ class Planner:
                                           unassigned_tasks,
                                           resource_pool,
                                           self.task_type_occurrences)
+            
+            # Get resource occupations
+            occupations = self.get_resource_occupations()
+
+            # Get resource fairnesses
+            fairnesses = self.get_resource_fairness(occupations)
+
             # Make allocation decision
             assignments = self.policy.allocate(unassigned_tasks,
                                                available_resources,
@@ -71,34 +86,69 @@ class Planner:
             self.is_warm_up = False
 
         if event.lifecycle_state == EventType.CASE_ARRIVAL:
-            self.task_type_occurrences[event.case_id] = dict.fromkeys(self.activity_names, 0)
             self.case_arival(event)
+            self.task_type_occurrences[event.case_id] = dict.fromkeys(self.activity_names, 0)
 
         elif event.lifecycle_state == EventType.TASK_ACTIVATE:
+            self.task_activate(event)
             self.task_type_occurrences[event.case_id][event.task.task_type] += 1
             self.task_queue[event.task] = None
-            self.task_activate(event)
 
         elif event.lifecycle_state == EventType.START_TASK:
             self.task_started[event.task] = event.timestamp
-            predicted_finish = 0
-            self.working_resources[event.resource] = (self.current_time, predicted_finish)
+            predicted_duration = self.prediction_model.predict(event.task, event.resource, self.task_type_occurrences[event.case_id])
+            self.working_resources[event.resource] = (self.current_time, predicted_duration)
             self.start_task(event)
 
         elif event.lifecycle_state == EventType.COMPLETE_TASK:
+            self.complete_task(event)
             duration = event.timestamp - self.task_started[event.task]
             self.task_started.pop(event.task)
             if self.is_warm_up:
                 self.task_resource_duration[(event.task, event.resource)] = duration
             del self.working_resources[event.resource]
             self.task_queue.pop(event.task)
-            self.complete_task(event)
 
         elif event.lifecycle_state == EventType.COMPLETE_CASE:
+            self.complete_case(event)
             self.task_type_occurrences.pop(event.case_id)
             if not self.is_warm_up:
                 self.prediction_model.delete_case_from_cache(event.case_id)
-            self.complete_case(event)
+
+    def resource_update(self, available_resources, unassigned_tasks, resource_pool):
+        available_resources = available_resources | set(self.working_resources.keys())
+        resources_gone = self.last_available_resources.copy()
+        for available_resource in available_resources:
+            if available_resource in resources_gone:
+                resources_gone.remove(available_resource)
+
+        resources_added = available_resources.copy()
+        for available_resource in self.last_available_resources:
+            if available_resource in resources_added:
+                resources_added.remove(available_resource)
+        
+        for resource_added in resources_added:
+            self.resources_last_active[resource_added] = self.current_time
+
+        for resource_gone in resources_gone:
+            self.resource_active_time[resource_gone] += self.current_time - self.resources_last_active[resource_gone]
+
+        self.last_available_resources = available_resources | set(self.working_resources.keys())
+
+    def get_resource_occupations(self):
+        res = dict()
+        for resource, availability in self.resource_active_time.items():
+            occupation = self.resource_occupation[resource]
+            res[resource] = occupation / availability
+        return res
+    
+    def get_resource_fairness(self, resource_occupations):
+        v = np.array(list(resource_occupations.values()))
+        average_occupation = np.mean(v)
+        res = dict()
+        for resource, occupation in resource_occupations.items():
+            res[resource] = (occupation - average_occupation)**2
+        return res
 
     def case_arival(self, event):
         pass
@@ -107,10 +157,11 @@ class Planner:
         pass
 
     def start_task(self, event):
-        pass
+        self.resource_occupation[event.resource] += self.working_resources[event.resource][1]
 
     def complete_task(self, event):
-        pass
+        # resource occupation update
+        self.resource_occupation[event.resource] += (event.timestamp - self.working_resources[event.resource][0]) - self.working_resources[event.resource][1]
 
     def complete_case(self, event):
         pass

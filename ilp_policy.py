@@ -4,7 +4,7 @@ import collections
 from ortools.sat.python import cp_model
 import logging
 
-from policy import Policy
+from policy import Policy, GreedyParallelMachinesSchedulingPolicy
 
 class UnrelatedMachinesScheduling:
     def __init__(self, task_data, max_value=None):
@@ -147,16 +147,20 @@ class UnrelatedParallelMachinesSchedulingPolicy(Policy):
         # Creates the solver and solve.
         model = UnrelatedMachinesScheduling(task_data)
         start_time = time.time()
-        #logging.basicConfig(level=logging.INFO, filename="log.txt", filemode="w")
+        logging.basicConfig(level=logging.INFO, filename="log.txt", filemode="w")
         solver = cp_model.CpSolver()
-        solver.parameters.log_search_progress = False
-        #solver.log_callback = logging.info
+        solver.parameters.log_search_progress = True
+        solver.log_callback = logging.info
 
         # Sets a time limit of 10 seconds.
-        solver.parameters.max_time_in_seconds = 60.0
+        solver.parameters.max_time_in_seconds = 1.0
 
         status = solver.Solve(model.model)
         end_time = time.time()
+
+        if end_time - start_time > 60:
+            print(int(end_time - start_time), len(unassigned_tasks), int(len(trd)/len(unassigned_tasks)),
+                      solver.ObjectiveValue(), model.horizon)
 
         if status != cp_model.OPTIMAL:
             if status == cp_model.FEASIBLE:
@@ -165,6 +169,7 @@ class UnrelatedParallelMachinesSchedulingPolicy(Policy):
             else:
                 print('No solution', int(end_time - start_time), len(unassigned_tasks), int(len(trd)/len(unassigned_tasks)),
                       model.horizon)
+                return GreedyParallelMachinesSchedulingPolicy().allocate(unassigned_tasks, available_resources, resource_pool, trd)
 
         swaped_tasks_dict = {v : k for k, v in task_encoding.items()}
         swaped_resources_dict = {v : k for k, v in resource_encoding.items()}
