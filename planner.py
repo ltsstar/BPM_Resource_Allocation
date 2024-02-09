@@ -61,6 +61,9 @@ class Planner:
             assignments = self.warm_up_policy.allocate(unassigned_tasks,
                                                available_resources,
                                                resource_pool,
+                                               None,
+                                               None,
+                                               None,
                                                None)
         else:
             # Predict task x resource durations
@@ -110,7 +113,10 @@ class Planner:
 
         elif event.lifecycle_state == EventType.START_TASK:
             self.task_started[event.task] = event.timestamp
-            predicted_duration = self.prediction_model.predict(event.task, event.resource, self.task_type_occurrences[event.case_id])
+            if self.is_warm_up:
+                predicted_duration = 0
+            else:
+                predicted_duration = self.prediction_model.predict(event.task, event.resource, self.task_type_occurrences[event.case_id])
             self.working_resources[event.resource] = (self.current_time, predicted_duration)
             self.start_task(event)
 

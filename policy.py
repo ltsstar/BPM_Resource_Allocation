@@ -46,7 +46,7 @@ class Policy:
 
 
 class RandomPolicy(Policy):
-    def allocate(self, unassigned_tasks, available_resources, resource_pool, trd, occupations, fairness):
+    def allocate(self, unassigned_tasks, available_resources, resource_pool, trd, occupations, fairness, task_costs):
         random.shuffle(unassigned_tasks)
         it_resources = list(available_resources)
         random.shuffle(it_resources)
@@ -61,7 +61,7 @@ class RandomPolicy(Policy):
         return assignments
 
 class FastestTaskFirst(Policy):
-    def allocate(self, unassigned_tasks, available_resources, resource_pool, trd, occupations, fairness):
+    def allocate(self, unassigned_tasks, available_resources, resource_pool, trd, occupations, fairness, task_costs):
         task_runtimes = collections.defaultdict(list)
         for ((task, resource), duration) in trd.items():
             if resource in resource_pool[task.task_type] and \
@@ -85,7 +85,7 @@ class FastestTaskFirst(Policy):
         
 
 class FastestResourceFirst(Policy):
-    def allocate(self, unassigned_tasks, available_resources, resource_pool, trd, occupations, fairness):
+    def allocate(self, unassigned_tasks, available_resources, resource_pool, trd, occupations, fairness, task_costs):
         resource_runtimes = collections.defaultdict(list)
         for ((task, resource), duration) in trd.items():
             if resource in resource_pool[task.task_type] and \
@@ -108,7 +108,7 @@ class FastestResourceFirst(Policy):
         return assignments
 
 class HungarianPolicy(Policy):
-    def allocate(self, unassigned_tasks, available_resources, resource_pool, trd, occupations, fairness):
+    def allocate(self, unassigned_tasks, available_resources, resource_pool, trd, occupations, fairness, task_costs):
         #trd = self.prune_trd(trd, resource_pool)
         task_data, task_encoding, resource_encoding = self.get_task_data_from_trd(trd)
         swaped_tasks_dict = {v : k for k, v in task_encoding.items()}
@@ -126,11 +126,11 @@ class HungarianPolicy(Policy):
         return self.prune_invalid_assignments(selected, available_resources, resource_pool, unassigned_tasks)
 
 class HungarianMultiObjectivePolicy(Policy):
-    def __init__(self, delta):
-        self.alpha = 1     # time
-        self.beta  = 0     # occupation
-        self.gamma = 0     # fairness
-        self.delta = delta
+    def __init__(self, alpha, beta, gamma, delta):
+        self.alpha = alpha     # time
+        self.beta  = beta      # occupation
+        self.gamma = gamma     # fairness
+        self.delta = delta     # non-allocation cost factor
 
         self.num_postponed = 0
         self.num_allocated = 0
@@ -205,7 +205,7 @@ class GreedyParallelMachinesSchedulingPolicy(Policy):
         return schedule
 
     
-    def allocate(self, unassigned_tasks, available_resources, resource_pool, trd, occupations, fairness):
+    def allocate(self, unassigned_tasks, available_resources, resource_pool, trd, occupations, fairness, task_costs):
         task_data, task_encoding, resource_encoding = self.get_task_data_from_trd(trd)
         schedule = self.greedy_policy(task_data)
         swaped_tasks_dict = {v : k for k, v in task_encoding.items()}

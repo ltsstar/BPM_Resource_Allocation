@@ -17,8 +17,10 @@ warm_up_time =  0
 simulation_time = 24*28
 
 def run_simulator(delta):
-    policy = HungarianMultiObjectivePolicy(delta)
-    my_planner = Planner(prediction_model, warm_up_policy, warm_up_time, policy,
+    policy = HungarianMultiObjectivePolicy(1, 0, 0, delta)
+    my_planner = Planner(prediction_model,
+                        warm_up_policy, warm_up_time,
+                        policy,
                         predict_multiple=True,
                         hour_timeout=120,
                         debug=False)
