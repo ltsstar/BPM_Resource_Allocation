@@ -3,6 +3,7 @@ import scipy
 import math
 import collections
 import random
+import itertools
 
 class Policy:
     def get_task_data_from_trd(self, trd, factor=3600):
@@ -17,9 +18,13 @@ class Policy:
                 (task_dict[task], resources_dict[resource], int(duration*factor))
             )
         return (task_data, task_dict, resources_dict)
+    
+    def factor_task_costs(self, task_costs, factor=3600):
+        for task in task_costs:
+            task_costs[task] = int(task_costs[task] * factor)
+        return task_costs
 
-
-    def allocate(self, unassigned_tasks, available_resources, resource_pool, trd, occupations, fairness):
+    def allocate(self, unassigned_tasks, available_resources, resource_pool, trd, occupations, fairness, task_costs):
         pass
 
     def prune_invalid_assignments(self, theoretical_assignments, available_resources, resource_pool, unassigned_tasks):
@@ -32,11 +37,11 @@ class Policy:
                 unassigned_tasks.remove(task)
         return assignments
 
-    def prune_trd(self, trd, resource_pool):
+    def prune_trd(self, trd, tasks, resources):
         pruned_trd = dict()
-        for (task, resource), duration in trd.items():
-            if resource in resource_pool[task.task_type]:
-                pruned_trd[(task, resource)] = duration
+        for task, resource in itertools.product(tasks, resources):
+            if (task, resource) in trd:
+                pruned_trd[(task, resource)] = trd[(task, resource)]
         return pruned_trd
 
 
@@ -127,25 +132,39 @@ class HungarianMultiObjectivePolicy(Policy):
         self.gamma = 0     # fairness
         self.delta = delta
 
-    def allocate(self, unassigned_tasks, available_resources, resource_pool, trd, occupations, fairness):
-        #trd = self.prune_trd(trd, resource_pool)
+        self.num_postponed = 0
+        self.num_allocated = 0
+
+    def allocate(self, unassigned_tasks, available_resources, resource_pool, trd, occupations, fairness, task_costs):
+        trd = self.prune_trd(trd, unassigned_tasks, available_resources)
         task_data, task_encoding, resource_encoding = self.get_task_data_from_trd(trd)
+
+        task_costs = self.factor_task_costs(task_costs)
         swaped_tasks_dict = {v : k for k, v in task_encoding.items()}
         swaped_resources_dict = {v : k for k, v in resource_encoding.items()}
 
         # tasks x (resources + dummy resources)
-        # add all with dummy resource costs
         task_np = np.full((len(swaped_tasks_dict), len(swaped_resources_dict)+len(swaped_tasks_dict)),
-                          self.delta,
+                          np.inf,
                           dtype=np.double)
 
         # replace matrix with normal resource costs
         for x, y, v in task_data:
+            # check if assignment is valid
+            resource = swaped_resources_dict[y]
+            task = swaped_tasks_dict[x]
+            if resource not in resource_pool[task.task_type]:
+                continue
             cost_1 = self.alpha*v
-            cost_2 = self.beta*occupations[swaped_resources_dict[y]] if swaped_resources_dict[y] in occupations else 0
-            cost_3 = self.gamma*fairness[swaped_resources_dict[y]] if swaped_resources_dict[y] in fairness else 0
+            cost_2 = self.beta*occupations[resource] if resource in occupations else 0
+            cost_3 = self.gamma*fairness[resource] if resource in fairness else 0
             cost = cost_1+cost_2+cost_3
             task_np[x,y] = cost
+
+        for y in range(len(swaped_resources_dict), len(swaped_resources_dict)+len(swaped_tasks_dict)):
+            x = y - len(swaped_resources_dict)
+            task_id = swaped_tasks_dict[x]
+            task_np[x, y] = self.delta * task_costs[task_id]
         
         #print(task_np)
         task_ind, resource_ind = scipy.optimize.linear_sum_assignment(task_np)
@@ -153,8 +172,13 @@ class HungarianMultiObjectivePolicy(Policy):
         for task_i, resource_i in zip(task_ind, resource_ind):
             if resource_i in swaped_resources_dict:
                 selected.append((swaped_tasks_dict[task_i], swaped_resources_dict[resource_i]))
+            else:
+                # selected dummy resource
+                self.num_postponed += 1
+        
+        self.num_allocated += len(selected)
+        return selected
 
-        return self.prune_invalid_assignments(selected, available_resources, resource_pool, unassigned_tasks)
 
 class GreedyParallelMachinesSchedulingPolicy(Policy):
     def greedy_policy(self, task_data):

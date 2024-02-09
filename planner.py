@@ -5,6 +5,7 @@ import task_execution_time
 import time
 import collections
 import numpy as np
+import math
 #from pympler.tracker import SummaryTracker
 
 #TRACKER = SummaryTracker()
@@ -17,8 +18,12 @@ class Planner:
     def __init__(self, prediction_model,
                  warm_up_policy, warm_up_time,
                  policy,
-                 predict_multiple = False):
+                 predict_multiple = False,
+                 hour_timeout = math.inf,
+                 debug = False):
+        self.debug = debug
         self.stop = False # Tell simulator to stop
+        self.hour_timeout = hour_timeout
         self.prediction_model = prediction_model
         self.task_started = dict()
         self.task_type_occurrences = dict()
@@ -59,9 +64,7 @@ class Planner:
                                                None)
         else:
             # Predict task x resource durations
-            trds = self.predictor.predict(self.working_resources,
-                                          available_resources,
-                                          unassigned_tasks,
+            trds, task_costs = self.predictor.predict(unassigned_tasks,
                                           resource_pool,
                                           self.task_type_occurrences)
             
@@ -77,14 +80,16 @@ class Planner:
                                                resource_pool,
                                                trds,
                                                occupations,
-                                               fairness)
+                                               fairness,
+                                               task_costs)
         return assignments
 
     def report(self, event):
         if int(event.timestamp) > int(self.current_time):
             time_diff = time.time() - self.last_time
-            #print(self.current_time_str(), time_diff,len(self.task_queue), len(self.working_resources))
-            if time_diff > 120:
+            if self.debug:
+                print(self.current_time_str(), time_diff,len(self.task_queue), len(self.working_resources))
+            if time_diff > self.hour_timeout:
                 self.stop = True
             self.last_time = time.time()
             #TRACKER.print_diff()
