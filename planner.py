@@ -91,7 +91,7 @@ class Planner:
         if int(event.timestamp) > int(self.current_time):
             time_diff = time.time() - self.last_time
             if self.debug:
-                print(self.current_time_str(), time_diff,len(self.task_queue), len(self.working_resources))
+                print(self.current_time_str(), time_diff,len(self.task_queue), len(self.last_available_resources))
             if time_diff > self.hour_timeout:
                 self.stop = True
             self.last_time = time.time()

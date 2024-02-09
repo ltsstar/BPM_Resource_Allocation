@@ -151,6 +151,7 @@ class Simulator:
 					i = random.randrange(len(self.away_resources))
 				required_resources = self.desired_nr_resources() - self.working_nr_resources()
 				if required_resources > 0:
+					# add new resources
 					for i in range(required_resources):
 						random_resource = random.choices(self.away_resources, self.away_resources_weights)[0]
 						away_resource_i = self.away_resources.index(random_resource)
@@ -160,6 +161,7 @@ class Simulator:
 					self.events.append((self.now, SimulationEvent(EventType.PLAN_TASKS, self.now, None, nr_tasks=len(self.unassigned_tasks), nr_resources=len(self.available_resources))))
 					self.events.sort()
 				elif required_resources < 0:
+					# remove resources
 					nr_resources_to_remove = min(len(self.available_resources), -required_resources)
 					resources_to_remove = random.sample(self.available_resources, nr_resources_to_remove)
 					for r in resources_to_remove:

@@ -11,7 +11,7 @@ import time
 
 prediction_model = ExecutionTimeModel()
 warm_up_policy = RandomPolicy()
-warm_up_time =  24*365*3
+warm_up_time =  24#*365*3
 simulation_time = warm_up_time
 
 #policy = HungarianMultiObjectivePolicy(1, 0, 0, delta)
