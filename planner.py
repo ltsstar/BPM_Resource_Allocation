@@ -131,8 +131,8 @@ class Planner:
 
         elif event.lifecycle_state == EventType.COMPLETE_CASE:
             self.complete_case(event)
-            self.task_type_occurrences.pop(event.case_id)
             if not self.is_warm_up:
+                self.task_type_occurrences.pop(event.case_id)
                 self.prediction_model.delete_case_from_cache(event.case_id)
 
     def resource_update(self, available_resources, unassigned_tasks, resource_pool):
