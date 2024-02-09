@@ -8,6 +8,7 @@ from task_execution_time import ExecutionTimeModel
 import numpy as np
 import multiprocessing
 import time
+import csv
 
 #import os
 #os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -61,7 +62,11 @@ for i in np.arange(0, 5, 0.1):
     processes.append(p)
 
     while not result_queue.empty():
-        print(result_queue.get())
+        res = result_queue.get()
+        print(res)
+        with open('results.csv', 'a') as f:
+            csv_writer = csv.writer(f)
+            csv_writer.writerow(res)
 
 for p in processes:
     p.join()
