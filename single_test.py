@@ -22,8 +22,8 @@ def run_simulator(delta):
                         warm_up_policy, warm_up_time,
                         policy,
                         predict_multiple=True,
-                        hour_timeout=120,
-                        debug=False)
+                        #hour_timeout=120,
+                        debug=True)
 
     simulator = Simulator(my_planner)
     simulator_result = simulator.run(simulation_time)

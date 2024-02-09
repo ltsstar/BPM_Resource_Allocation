@@ -8,31 +8,33 @@ from task_execution_time import ExecutionTimeModel
 import numpy as np
 import multiprocessing
 import time
-import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-prediction_model = ExecutionTimeModel()
-with open('prediction_model.pkl', 'rb') as file:
-    prediction_model = pickle.load(file)
+#import os
+#os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-warm_up_policy = RandomPolicy()
-warm_up_time =  0
-simulation_time = 24
+
 
 def run_simulator(delta, result_queue):
+    prediction_model = ExecutionTimeModel()
+    with open('prediction_model.pkl', 'rb') as file:
+        prediction_model = pickle.load(file)
+
+    warm_up_policy = RandomPolicy()
+    warm_up_time =  0
+    simulation_time = 24
     policy = HungarianMultiObjectivePolicy(1, 0, 0, delta)
     my_planner = Planner(prediction_model, warm_up_policy, warm_up_time, policy,
                         predict_multiple=True,
                         hour_timeout=120,
-                        debug=False)
+                        debug=True)
 
     simulator = Simulator(my_planner)
     simulator_result = simulator.run(simulation_time)
     if simulator_result[1] == "Stopped":
-        result_queue.push([str(delta), "Stopped", *map(str, my_planner.get_current_loss()),
+        result_queue.put([str(delta), "Stopped", *map(str, my_planner.get_current_loss()),
                           str(my_planner.policy.num_allocated), str(my_planner.policy.num_postponed)])
     else:
-        result_queue.push([str(delta), simulator_result[1], *map(str, my_planner.get_current_loss()),
+        result_queue.put([str(delta), simulator_result[1], *map(str, my_planner.get_current_loss()),
                           str(my_planner.policy.num_allocated), str(my_planner.policy.num_postponed)])
 
 def get_alive_proceses(all_procesess):
