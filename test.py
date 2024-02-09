@@ -9,6 +9,7 @@ import numpy as np
 import multiprocessing
 import time
 import csv
+import sys
 
 #import os
 #os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -22,11 +23,11 @@ def run_simulator(delta, result_queue):
 
     warm_up_policy = RandomPolicy()
     warm_up_time =  0
-    simulation_time = 24
+    simulation_time = 24*365
     policy = HungarianMultiObjectivePolicy(1, 0, 0, delta)
     my_planner = Planner(prediction_model, warm_up_policy, warm_up_time, policy,
                         predict_multiple=True,
-                        hour_timeout=120,
+                        hour_timeout=360,
                         debug=True)
 
     simulator = Simulator(my_planner)
@@ -49,8 +50,8 @@ processes = []
 result_queue = multiprocessing.Queue()
 alive_processes = []
 
-MAX_PROCESSES = 2
-for i in np.arange(0, 5, 0.1):
+MAX_PROCESSES = 4 
+for i in np.arange(float(sys.argv[1]), float(sys.argv[2]), float(sys.argv[3])):
     alive_processes = get_alive_proceses(processes)
     while len(alive_processes) >= MAX_PROCESSES:
         time.sleep(0.5)
