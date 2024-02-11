@@ -36,7 +36,7 @@ def run_simulator(delta, result_queue):
         result_queue.put([str(delta), "Stopped", *map(str, my_planner.get_current_loss()),
                           str(my_planner.policy.num_allocated), str(my_planner.policy.num_postponed)])
     else:
-        result_queue.put([str(delta), simulator_result[1], *map(str, my_planner.get_current_loss()),
+        result_queue.put([str(delta), *map(str, simulator_result), *map(str, my_planner.get_current_loss()),
                           str(my_planner.policy.num_allocated), str(my_planner.policy.num_postponed)])
 
 def get_alive_proceses(all_procesess):
@@ -50,7 +50,7 @@ processes = []
 result_queue = multiprocessing.Queue()
 alive_processes = []
 
-MAX_PROCESSES = 4 
+MAX_PROCESSES = 6 
 for i in np.arange(float(sys.argv[1]), float(sys.argv[2]), float(sys.argv[3])):
     alive_processes = get_alive_proceses(processes)
     while len(alive_processes) >= MAX_PROCESSES:
