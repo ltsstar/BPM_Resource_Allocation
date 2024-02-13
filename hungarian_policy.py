@@ -55,7 +55,7 @@ class HungarianMultiObjectivePolicy(Policy):
             if resource not in resource_pool[task.task_type]:
                 continue
             if resource in working_resources:
-                start_time = max(0, working_resources[resource][0] - current_time + working_resources[resource][1])
+                start_time = max(0, working_resources[resource][0] - current_time + working_resources[resource][1]) * 3600
             else:
                 start_time = 0
             cost_1 = self.alpha*(v + start_time)

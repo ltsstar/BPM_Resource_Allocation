@@ -193,7 +193,8 @@ class UnrelatedParallelMachinesSchedulingNonAssignPolicy(Policy):
         machines_start = {}
         for resource, resource_enc in resource_encoding.items():
             if resource in working_resources:
-                machines_start[resource_enc] = 0
+                start_time = max(0, working_resources[resource][0] - current_time + working_resources[resource][1])
+                machines_start[resource_enc] = int(start_time * 3600)
             else:
                 machines_start[resource_enc] = 0
 
@@ -223,7 +224,8 @@ class UnrelatedParallelMachinesSchedulingNonAssignPolicy(Policy):
                 self.no_solution += 1
                 print('No solution', int(end_time - start_time), len(unassigned_tasks), len(relevant_resources),
                       model.horizon)
-                return GreedyParallelMachinesSchedulingPolicy().allocate(unassigned_tasks, available_resources, resource_pool, trd, occupations, fairness, task_costs)
+                return GreedyParallelMachinesSchedulingPolicy().allocate(unassigned_tasks, available_resources, resource_pool, trd,
+                        occupations, fairness, task_costs, working_resources, current_time)
         self.optimal += 1
         #print(solver.Value(model.duration_var), solver.Value(model.non_assign_sum))
 
