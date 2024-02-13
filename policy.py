@@ -111,20 +111,23 @@ class FastestResourceFirst(Policy):
         return assignments
 
 class GreedyParallelMachinesSchedulingPolicy(Policy):
-    def greedy_policy(self, task_data):
+    def greedy_policy(self, task_data, machines_start):
         max_task = max([task[0] for task in task_data])
         max_resources = max([task[1] for task in task_data])
 
-        resource_times = {key: 0 for key in range(max_resources+1)}
+        resource_times = machines_start.copy()
         schedule = collections.defaultdict(list)
 
-        for i in range(max_task+1):
+        for task in range(max_task+1):
+            min_max_time = math.inf
+            selected_resource = None
+            
             feasible_resources = list(filter(lambda t : t is not None, [task if task[0]==i else None for task in task_data]))
             min_resource_time, min_resource = math.inf, None
             for j, feasible_resource in enumerate(feasible_resources):
                 rt = resource_times[feasible_resource[1]] + feasible_resource[2]
                 if rt < min_resource_time:
-                    #allocate task to resource
+                    #pre allocate task to resource
                     min_resource_time, min_resource = rt, feasible_resource[1]
                     schedule[min_resource] += [(resource_times[min_resource], feasible_resource[0])]
 
@@ -138,7 +141,17 @@ class GreedyParallelMachinesSchedulingPolicy(Policy):
     def allocate(self, unassigned_tasks, available_resources, resource_pool, trd,
                  occupations, fairness, task_costs, working_resources, current_time):
         task_data, task_encoding, resource_encoding = self.get_task_data_from_trd(trd)
-        schedule = self.greedy_policy(task_data)
+
+        # get encoded machines start
+        machines_start = {}
+        for resource, resource_enc in resource_encoding.items():
+            if resource in working_resources:
+                start_time = max(0, working_resources[resource][0] - current_time + working_resources[resource][1])
+                machines_start[resource_enc] = int(start_time * 3600)
+            else:
+                machines_start[resource_enc] = 0
+
+        schedule = self.greedy_policy(task_data, machines_start)
         swaped_tasks_dict = {v : k for k, v in task_encoding.items()}
         swaped_resources_dict = {v : k for k, v in resource_encoding.items()}
 

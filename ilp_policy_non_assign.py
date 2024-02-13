@@ -213,7 +213,7 @@ class UnrelatedParallelMachinesSchedulingNonAssignPolicy(Policy):
             solver.log_callback = logging.info
 
         # Sets a time limit of 10 seconds.
-        solver.parameters.max_time_in_seconds = 1.0
+        solver.parameters.max_time_in_seconds = 5.0
 
         status = solver.Solve(model.model)
         end_time = time.time()

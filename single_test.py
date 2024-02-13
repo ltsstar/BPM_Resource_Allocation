@@ -20,8 +20,8 @@ warm_up_time =  0
 simulation_time = 24*365
 
 def run_simulator(delta):
-    #policy = UnrelatedParallelMachinesSchedulingNonAssignPolicy(1, 0, 0, delta)
-    policy = HungarianMultiObjectivePolicy(1, 0, 0, delta)
+    policy = UnrelatedParallelMachinesSchedulingNonAssignPolicy(1, 0, 0, delta)
+    #policy = HungarianMultiObjectivePolicy(1, 0, 0, delta)
     my_planner = Planner(prediction_model,
                         warm_up_policy, warm_up_time,
                         policy,
@@ -40,5 +40,5 @@ def run_simulator(delta):
 
 
 
-res = run_simulator(2.5)
+res = run_simulator(1.2)
 print(res)
