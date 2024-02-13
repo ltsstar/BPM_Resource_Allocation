@@ -5,6 +5,7 @@ from ortools.sat.python import cp_model
 import logging
 
 from policy import Policy, GreedyParallelMachinesSchedulingPolicy
+from hungarian_policy import HungarianMultiObjectivePolicy
 
 class UnrelatedMachinesSchedulingNonAssign:
     def __init__(self, task_data, non_assign_cost, 
@@ -173,6 +174,8 @@ class UnrelatedParallelMachinesSchedulingNonAssignPolicy(Policy):
         self.logging = False
         self.optimal, self.feasible, self.no_solution = (0, 0, 0)
 
+        self.back_up_policy = HungarianMultiObjectivePolicy(alpha, beta, gamma, delta)
+
     def allocate(self, unassigned_tasks, available_resources, resource_pool, trd,
                  occupations, fairness, task_costs, working_resources, current_time):
         relevant_resources = set(available_resources) | set(working_resources)
@@ -224,7 +227,7 @@ class UnrelatedParallelMachinesSchedulingNonAssignPolicy(Policy):
                 self.no_solution += 1
                 print('No solution', int(end_time - start_time), len(unassigned_tasks), len(relevant_resources),
                       model.horizon)
-                return GreedyParallelMachinesSchedulingPolicy().allocate(unassigned_tasks, available_resources, resource_pool, trd,
+                return self.back_up_policy.allocate(unassigned_tasks, available_resources, resource_pool, trd,
                         occupations, fairness, task_costs, working_resources, current_time)
         self.optimal += 1
         #print(solver.Value(model.duration_var), solver.Value(model.non_assign_sum))
