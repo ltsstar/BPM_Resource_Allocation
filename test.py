@@ -3,7 +3,9 @@ from simulator.simulator import Simulator
 from planner import Planner
 from policy import *
 from ilp_policy import UnrelatedParallelMachinesSchedulingPolicy
+from ilp_policy_non_assign import UnrelatedParallelMachinesSchedulingNonAssignPolicy
 from task_execution_time import ExecutionTimeModel
+from hungarian_policy import HungarianMultiObjectivePolicy
 
 import numpy as np
 import multiprocessing
@@ -16,15 +18,19 @@ import sys
 
 
 
-def run_simulator(delta, result_queue):
+def run_simulator(days, objective, delta, result_queue):
+    start_time = time.time()
     prediction_model = ExecutionTimeModel()
     with open('prediction_model.pkl', 'rb') as file:
         prediction_model = pickle.load(file)
 
     warm_up_policy = RandomPolicy()
     warm_up_time =  0
-    simulation_time = 24*365
-    policy = HungarianMultiObjectivePolicy(1, 0, 0, delta)
+    simulation_time = 24*days
+    if objective == "Hungarian":
+        policy = HungarianMultiObjectivePolicy(1, 0, 0, delta)
+    elif objective == "MILP":
+        policy = UnrelatedParallelMachinesSchedulingNonAssignPolicy(1, 0, 0, delta)
     my_planner = Planner(prediction_model, warm_up_policy, warm_up_time, policy,
                         predict_multiple=True,
                         hour_timeout=360,
@@ -33,11 +39,16 @@ def run_simulator(delta, result_queue):
     simulator = Simulator(my_planner)
     simulator_result = simulator.run(simulation_time)
     if simulator_result[1] == "Stopped":
-        result_queue.put([str(delta), "Stopped", *map(str, my_planner.get_current_loss()),
-                          str(my_planner.policy.num_allocated), str(my_planner.policy.num_postponed)])
+        res = [objective, str(time.time()-start_time), str(delta), "Stopped", "", *map(str, my_planner.get_current_loss()),
+                          str(my_planner.policy.num_allocated), str(my_planner.policy.num_postponed)]
     else:
-        result_queue.put([str(delta), *map(str, simulator_result), *map(str, my_planner.get_current_loss()),
-                          str(my_planner.policy.num_allocated), str(my_planner.policy.num_postponed)])
+        res = [objective, str(time.time()-start_time), str(delta), *map(str, simulator_result), *map(str, my_planner.get_current_loss()),
+                          str(my_planner.policy.num_allocated), str(my_planner.policy.num_postponed)]
+    if objective == "MILP":
+        res += [str(policy.optimal), str(policy.feasible), str(policy.no_solution)]
+    else:
+        res += ['', '', '']
+    result_queue.put(res)
 
 def get_alive_proceses(all_procesess):
     result = []
@@ -50,14 +61,14 @@ processes = []
 result_queue = multiprocessing.Queue()
 alive_processes = []
 
-MAX_PROCESSES = 6 
+MAX_PROCESSES = int(sys.argv[6])
 for i in np.arange(float(sys.argv[1]), float(sys.argv[2]), float(sys.argv[3])):
     alive_processes = get_alive_proceses(processes)
     while len(alive_processes) >= MAX_PROCESSES:
         time.sleep(0.5)
         alive_processes = get_alive_proceses(processes)
 
-    p = multiprocessing.Process(target=run_simulator, args=(i, result_queue))
+    p = multiprocessing.Process(target=run_simulator, args=(int(sys.argv[5]), sys.argv[4], i, result_queue))
     p.start()
     print(i, 'Started')
     processes.append(p)

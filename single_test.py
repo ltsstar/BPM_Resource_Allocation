@@ -1,8 +1,11 @@
 import pickle
 from simulator.simulator import Simulator
 from planner import Planner
+
 from policy import *
 from ilp_policy import UnrelatedParallelMachinesSchedulingPolicy
+from ilp_policy_non_assign import UnrelatedParallelMachinesSchedulingNonAssignPolicy
+from hungarian_policy import *
 from task_execution_time import ExecutionTimeModel
 
 import multiprocessing
@@ -14,9 +17,10 @@ with open('prediction_model.pkl', 'rb') as file:
 
 warm_up_policy = RandomPolicy()
 warm_up_time =  0
-simulation_time = 24*28
+simulation_time = 24*365
 
 def run_simulator(delta):
+    #policy = UnrelatedParallelMachinesSchedulingNonAssignPolicy(1, 0, 0, delta)
     policy = HungarianMultiObjectivePolicy(1, 0, 0, delta)
     my_planner = Planner(prediction_model,
                         warm_up_policy, warm_up_time,
@@ -36,6 +40,5 @@ def run_simulator(delta):
 
 
 
-for i in range(0,10):
-    res = run_simulator(i)
-    print(res)
+res = run_simulator(2.5)
+print(res)

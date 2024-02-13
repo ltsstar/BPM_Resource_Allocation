@@ -131,8 +131,9 @@ class ExecutionTimeModel:
             onehot_data = self._encoder.transform(onehot_data_df)
             x = np.concatenate((normalized_data, standardized_data, onehot_data), axis=1)
             y = self._model(x, training=False)
+
             for i, idx in enumerate(to_predict):
-                res = float(y[i][0])
+                res = max(0.0, float(y[i][0]))
                 results[idx] = res
                 case_id = idx[0].case_id
                 hash_value = self._hash_data(idx[0], idx[1], task_type_occurrences[case_id])

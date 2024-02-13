@@ -71,6 +71,7 @@ class Planner:
                                           resource_pool,
                                           self.task_type_occurrences)
             
+            
             # Get resource occupations
             occupations = self.get_resource_occupations()
 
@@ -84,7 +85,9 @@ class Planner:
                                                trds,
                                                occupations,
                                                fairness,
-                                               task_costs)
+                                               task_costs,
+                                               self.working_resources,
+                                               self.current_time)
         return assignments
 
     def report(self, event):
@@ -189,6 +192,7 @@ class Planner:
         pass
 
     def start_task(self, event):
+        # resource occupation estimation - later update
         self.resource_occupation[event.resource] += self.working_resources[event.resource][1]
 
     def complete_task(self, event):

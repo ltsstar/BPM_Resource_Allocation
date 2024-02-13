@@ -214,18 +214,14 @@ class UnrelatedParallelMachinesSchedulingNonAssignPolicy(Policy):
         status = solver.Solve(model.model)
         end_time = time.time()
 
-        if end_time - start_time > 60:
-            print(int(end_time - start_time), len(unassigned_tasks), int(len(trd)/len(unassigned_tasks)),
-                      solver.ObjectiveValue(), model.horizon)
-
         if status != cp_model.OPTIMAL:
             if status == cp_model.FEASIBLE:
                 self.feasible += 1
-                print('Feasible', int(end_time - start_time), len(unassigned_tasks), len(trd),
+                print('Feasible', int(end_time - start_time), len(unassigned_tasks), len(relevant_resources),
                       solver.ObjectiveValue(), model.horizon)
             else:
                 self.no_solution += 1
-                print('No solution', int(end_time - start_time), len(unassigned_tasks), len(trd),
+                print('No solution', int(end_time - start_time), len(unassigned_tasks), len(relevant_resources),
                       model.horizon)
                 return GreedyParallelMachinesSchedulingPolicy().allocate(unassigned_tasks, available_resources, resource_pool, trd, occupations, fairness, task_costs)
         self.optimal += 1
