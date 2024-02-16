@@ -31,9 +31,9 @@ class UnrelatedMachinesSchedulingNonAssign:
         self.intervals = collections.defaultdict(list)
         self.goal_variables = collections.defaultdict(list)
         if max_value:
-            self.horizon = self.__get_horizon()[0], max_value
+            self.horizon = 0, max_value
         elif greedy_max:
-            self.horizon = self.__get_horizon()[0], self.__get_greedy_max()
+            self.horizon = 0, self.__get_greedy_max()
         else:
             self.horizon = self.__get_horizon()
         #print(self.horizon)
@@ -57,18 +57,11 @@ class UnrelatedMachinesSchedulingNonAssign:
 
     def __get_horizon(self):
         max_task = max([task[0] for task in self.task_data])
-        max_resource = max([task[1] for task in self.task_data])
-        max_resource_duration = dict()
-        min_resource_duration = dict()
+        #max_resource = max([task[1] for task in self.task_data])
         min_task_duration, max_task_duration = dict(), dict()
         for t in range(max_task+1):
-            #min_resource_duration[r] = min([task[2] if task[1]==r else math.inf for task in self.task_data])
-            #max_resource_duration[r] = max([task[2] if task[1]==r else 0 for task in self.task_data])
             min_task_duration[t] = min([task[2] if task[0]==t else math.inf for task in self.task_data])
-            max_task_duration[t] = max([task[2] if task[0]==t else 0 for task in self.task_data])
-        #horizon = max(min_task_duration.values()), sum(min_task_duration.values())+1#, sum(max_task_duration.values())
-        #min_horizon = min(int(sum(min_task_duration.values())/(max_resource+1)),
-        #                  sum(self.non_assign_cost.values()))
+            #max_task_duration[t] = max([task[2] if task[0]==t else 0 for task in self.task_data])
         min_horizon = 0
         horizon = min_horizon, sum(min_task_duration.values())+1
         return horizon
@@ -218,19 +211,23 @@ class UnrelatedParallelMachinesSchedulingNonAssignPolicy(Policy):
 
         status = solver.Solve(model.model)
         end_time = time.time()
+        duration = end_time - start_time
 
         if status != cp_model.OPTIMAL:
             if status == cp_model.FEASIBLE:
                 self.feasible += 1
-                print('Feasible', int(end_time - start_time), len(unassigned_tasks), len(relevant_resources),
+                print('Feasible', round(duration, 2), len(relevant_resources), len(unassigned_tasks), len(trd),
                       solver.ObjectiveValue(), model.horizon)
             else:
                 self.no_solution += 1
-                print('No solution', int(end_time - start_time), len(unassigned_tasks), len(relevant_resources),
+                print('No solution', round(duration, 2), len(relevant_resources), len(unassigned_tasks), len(trd),
                       model.horizon)
                 return self.back_up_policy.allocate(unassigned_tasks, available_resources, resource_pool, trd,
                         occupations, fairness, task_costs, working_resources, current_time)
-        self.optimal += 1
+        else:
+            self.optimal += 1
+            print('Optimal', int(duration), len(relevant_resources), len(unassigned_tasks), len(trd),
+                      solver.ObjectiveValue(), model.horizon)
         #print(solver.Value(model.duration_var), solver.Value(model.non_assign_sum))
 
         for task, postponed_var in model.task_non_assign.items():

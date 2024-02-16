@@ -45,6 +45,8 @@ class Planner:
         self.case_start = dict()
         self.cases_completed = 0
 
+        self.num_assignments = 0
+
         if self.warm_up_time == 0:
             self.is_warm_up = False
 
@@ -88,6 +90,7 @@ class Planner:
                                                task_costs,
                                                self.working_resources,
                                                self.current_time)
+            self.num_assignments += len(assignments)
         return assignments
 
     def report(self, event):

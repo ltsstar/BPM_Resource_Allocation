@@ -40,10 +40,10 @@ def run_simulator(days, objective, delta, result_queue):
     simulator_result = simulator.run(simulation_time)
     if simulator_result[1] == "Stopped":
         res = [objective, str(time.time()-start_time), str(delta), "Stopped", "", *map(str, my_planner.get_current_loss()),
-                          str(my_planner.policy.num_allocated), str(my_planner.policy.num_postponed)]
+                          str(my_planner.num_assignments), str(my_planner.policy.num_allocated), str(my_planner.policy.num_postponed)]
     else:
         res = [objective, str(time.time()-start_time), str(delta), *map(str, simulator_result), *map(str, my_planner.get_current_loss()),
-                          str(my_planner.policy.num_allocated), str(my_planner.policy.num_postponed)]
+                          str(my_planner.num_assignments), str(my_planner.policy.num_allocated), str(my_planner.policy.num_postponed)]
     if objective == "MILP":
         res += [str(policy.optimal), str(policy.feasible), str(policy.no_solution)]
     else:
