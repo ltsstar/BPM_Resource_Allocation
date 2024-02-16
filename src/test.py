@@ -18,7 +18,7 @@ import sys
 
 
 
-def run_simulator(days, objective, delta, result_queue):
+def run_simulator(days, objective, delta, result_queue, selection_strategy=None):
     start_time = time.time()
     prediction_model = ExecutionTimeModel()
     with open('prediction_model.pkl', 'rb') as file:
@@ -30,10 +30,10 @@ def run_simulator(days, objective, delta, result_queue):
     if objective == "Hungarian":
         policy = HungarianMultiObjectivePolicy(1, 0, 0, delta)
     elif objective == "MILP":
-        policy = UnrelatedParallelMachinesSchedulingNonAssignPolicy(1, 0, 0, delta)
+        policy = UnrelatedParallelMachinesSchedulingNonAssignPolicy(1, 0, 0, delta, selection_strategy)
     my_planner = Planner(prediction_model, warm_up_policy, warm_up_time, policy,
                         predict_multiple=True,
-                        hour_timeout=360,
+                        hour_timeout=3600,
                         debug=True)
 
     simulator = Simulator(my_planner)
@@ -45,9 +45,9 @@ def run_simulator(days, objective, delta, result_queue):
         res = [objective, str(time.time()-start_time), str(delta), *map(str, simulator_result), *map(str, my_planner.get_current_loss()),
                           str(my_planner.num_assignments), str(my_planner.policy.num_allocated), str(my_planner.policy.num_postponed)]
     if objective == "MILP":
-        res += [str(policy.optimal), str(policy.feasible), str(policy.no_solution)]
+        res += [str(policy.optimal), str(policy.feasible), str(policy.no_solution), selection_strategy]
     else:
-        res += ['', '', '']
+        res += ['', '', '', '']
     result_queue.put(res)
 
 def get_alive_proceses(all_procesess):
@@ -68,7 +68,8 @@ for i in np.arange(float(sys.argv[1]), float(sys.argv[2]), float(sys.argv[3])):
         time.sleep(0.5)
         alive_processes = get_alive_proceses(processes)
 
-    p = multiprocessing.Process(target=run_simulator, args=(int(sys.argv[5]), sys.argv[4], i, result_queue))
+    selection_strategy = sys.argv[7]
+    p = multiprocessing.Process(target=run_simulator, args=(int(sys.argv[5]), sys.argv[4], i, result_queue, selection_strategy))
     p.start()
     print(i, 'Started')
     processes.append(p)

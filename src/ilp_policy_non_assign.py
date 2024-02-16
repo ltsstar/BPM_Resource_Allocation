@@ -3,6 +3,7 @@ import time
 import collections
 from ortools.sat.python import cp_model
 import logging
+import random
 
 from policy import Policy, GreedyParallelMachinesSchedulingPolicy
 from hungarian_policy import HungarianMultiObjectivePolicy
@@ -157,11 +158,12 @@ class UnrelatedMachinesSchedulingNonAssign:
 
 
 class UnrelatedParallelMachinesSchedulingNonAssignPolicy(Policy):
-    def __init__(self, alpha, beta, gamma, delta):
+    def __init__(self, alpha, beta, gamma, delta, selection_strategy):
         self.alpha = alpha     # time
         self.beta  = beta      # occupation
         self.gamma = gamma     # fairness
         self.delta = delta     # non-allocation cost factor
+        self.selection_strategy = selection_strategy
 
         self.num_postponed = 0
         self.num_allocated = 0
@@ -172,7 +174,7 @@ class UnrelatedParallelMachinesSchedulingNonAssignPolicy(Policy):
 
     def allocate(self, unassigned_tasks, available_resources, resource_pool, trd,
                  occupations, fairness, task_costs, working_resources, current_time):
-        relevant_resources = set(available_resources) | set(working_resources)
+        relevant_resources = set(available_resources) | set(working_resources.keys())
         trd = self.prune_trd(trd, unassigned_tasks, relevant_resources)
         if not trd:
             return []
@@ -207,7 +209,7 @@ class UnrelatedParallelMachinesSchedulingNonAssignPolicy(Policy):
             solver.log_callback = logging.info
 
         # Sets a time limit of 10 seconds.
-        solver.parameters.max_time_in_seconds = 5.0
+        solver.parameters.max_time_in_seconds = 2.0
 
         status = solver.Solve(model.model)
         end_time = time.time()
@@ -226,7 +228,7 @@ class UnrelatedParallelMachinesSchedulingNonAssignPolicy(Policy):
                         occupations, fairness, task_costs, working_resources, current_time)
         else:
             self.optimal += 1
-            print('Optimal', int(duration), len(relevant_resources), len(unassigned_tasks), len(trd),
+            print('Optimal', round(duration, 2), len(relevant_resources), len(unassigned_tasks), len(trd),
                       solver.ObjectiveValue(), model.horizon)
         #print(solver.Value(model.duration_var), solver.Value(model.non_assign_sum))
 
@@ -238,14 +240,21 @@ class UnrelatedParallelMachinesSchedulingNonAssignPolicy(Policy):
         schedule = collections.defaultdict(list)
         for (task, resource), interval in model.intervals.items():
             if solver.Value(interval.assigned):
-                schedule[resource].append((task, solver.Value(interval.start)))
+                schedule[resource].append((task, solver.Value(interval.start), solver.Value(interval.end)))
         
+        # select first task (for every resource)
         for resource, resource_schedule in schedule.items():
             decoded_resource = swaped_resources_dict[resource]
-            first_task = sorted(resource_schedule, key=lambda s: s[1])[0][0]
-            decoded_task = swaped_tasks_dict[first_task]
+            if self.selection_strategy == 'first':
+                selected_task = sorted(resource_schedule, key=lambda s: s[1])[0][0]
+            elif self.selection_strategy == 'fastest':
+                selected_task = sorted(resource_schedule, key=lambda s: s[2] - s[1])[0][0]
+            elif self.selection_strategy == 'random':
+                selected_task = random.choice(resource_schedule)[0]
+            decoded_task = swaped_tasks_dict[selected_task]
             selected.append((decoded_task, decoded_resource))
             self.num_allocated += 1
-        
+
+
         return self.prune_invalid_assignments(selected, available_resources, resource_pool, unassigned_tasks)
         #return selected
