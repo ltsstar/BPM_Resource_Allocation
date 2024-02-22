@@ -4,7 +4,7 @@ from planner import Planner
 
 from policy import *
 from ilp_policy import UnrelatedParallelMachinesSchedulingPolicy
-from ilp_policy_non_assign import UnrelatedParallelMachinesSchedulingNonAssignPolicy
+from ilp_policy_non_assign_2 import UnrelatedParallelMachinesSchedulingNonAssignPolicy2
 from hungarian_policy import *
 from task_execution_time import ExecutionTimeModel
 
@@ -20,7 +20,7 @@ warm_up_time =  0
 simulation_time = 24*365
 
 def run_simulator(delta):
-    policy = UnrelatedParallelMachinesSchedulingNonAssignPolicy(1, 0, 0, delta, 'fastest')
+    policy = UnrelatedParallelMachinesSchedulingNonAssignPolicy2(1, 0, 0, delta, 'fastest')
     #policy = HungarianMultiObjectivePolicy(1, 0, 0, delta)
     my_planner = Planner(prediction_model,
                         warm_up_policy, warm_up_time,
