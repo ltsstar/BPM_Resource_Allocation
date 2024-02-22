@@ -20,7 +20,7 @@ import sys
 
 
 def run_simulator(days, objective, delta, result_queue, selection_strategy=None):
-    start_time = time.time()
+    start_time = time.process_time()
     prediction_model = ExecutionTimeModel()
     with open('prediction_model.pkl', 'rb') as file:
         prediction_model = pickle.load(file)
@@ -40,10 +40,10 @@ def run_simulator(days, objective, delta, result_queue, selection_strategy=None)
     simulator = Simulator(my_planner)
     simulator_result = simulator.run(simulation_time)
     if simulator_result[1] == "Stopped":
-        res = [objective, str(time.time()-start_time), str(delta), "Stopped", "", *map(str, my_planner.get_current_loss()),
+        res = [objective, str(time.process_time()-start_time), str(delta), "Stopped", "", *map(str, my_planner.get_current_loss()),
                           str(my_planner.num_assignments), str(my_planner.policy.num_allocated), str(my_planner.policy.num_postponed)]
     else:
-        res = [objective, str(time.time()-start_time), str(delta), *map(str, simulator_result), *map(str, my_planner.get_current_loss()),
+        res = [objective, str(time.process_time()-start_time), str(delta), *map(str, simulator_result), *map(str, my_planner.get_current_loss()),
                           str(my_planner.num_assignments), str(my_planner.policy.num_allocated), str(my_planner.policy.num_postponed)]
     if objective == "MILP":
         res += [str(policy.optimal), str(policy.feasible), str(policy.no_solution), selection_strategy]
