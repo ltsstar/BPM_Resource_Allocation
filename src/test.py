@@ -4,6 +4,7 @@ from planner import Planner
 from policy import *
 from ilp_policy import UnrelatedParallelMachinesSchedulingPolicy
 from ilp_policy_non_assign import UnrelatedParallelMachinesSchedulingNonAssignPolicy
+from ilp_policy_non_assign_2 import UnrelatedParallelMachinesSchedulingNonAssignPolicy2
 from task_execution_time import ExecutionTimeModel
 from hungarian_policy import HungarianMultiObjectivePolicy
 
@@ -30,7 +31,7 @@ def run_simulator(days, objective, delta, result_queue, selection_strategy=None)
     if objective == "Hungarian":
         policy = HungarianMultiObjectivePolicy(1, 0, 0, delta)
     elif objective == "MILP":
-        policy = UnrelatedParallelMachinesSchedulingNonAssignPolicy(1, 0, 0, delta, selection_strategy)
+        policy = UnrelatedParallelMachinesSchedulingNonAssignPolicy2(1, 0, 0, delta, selection_strategy)
     my_planner = Planner(prediction_model, warm_up_policy, warm_up_time, policy,
                         predict_multiple=True,
                         hour_timeout=3600,
