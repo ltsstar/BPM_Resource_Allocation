@@ -11,6 +11,7 @@ from hungarian_policy import HungarianMultiObjectivePolicy
 import numpy as np
 import multiprocessing
 import time
+from datetime import datetime
 import csv
 import sys
 
@@ -20,6 +21,7 @@ import sys
 
 
 def run_simulator(days, objective, delta, result_queue, selection_strategy=None):
+    real_start_time = time.time()
     start_time = time.process_time()
     prediction_model = ExecutionTimeModel()
     with open('prediction_model.pkl', 'rb') as file:
@@ -39,11 +41,16 @@ def run_simulator(days, objective, delta, result_queue, selection_strategy=None)
 
     simulator = Simulator(my_planner)
     simulator_result = simulator.run(simulation_time)
+    times = (datetime.fromtimestamp(real_start_time).strftime("%Y-%m-%d %H:%M:%S"),
+             datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d %H:%M:%S"),
+             str(time.time() - real_start_time),
+             str(time.process_time()-start_time)
+            )
     if simulator_result[1] == "Stopped":
-        res = [objective, str(time.process_time()-start_time), str(delta), "Stopped", "", *map(str, my_planner.get_current_loss()),
+        res = [objective, *times, str(delta), "Stopped", "", *map(str, my_planner.get_current_loss()),
                           str(my_planner.num_assignments), str(my_planner.policy.num_allocated), str(my_planner.policy.num_postponed)]
     else:
-        res = [objective, str(time.process_time()-start_time), str(delta), *map(str, simulator_result), *map(str, my_planner.get_current_loss()),
+        res = [objective, *times, str(delta), *map(str, simulator_result), *map(str, my_planner.get_current_loss()),
                           str(my_planner.num_assignments), str(my_planner.policy.num_allocated), str(my_planner.policy.num_postponed)]
     if objective == "MILP":
         res += [str(policy.optimal), str(policy.feasible), str(policy.no_solution), selection_strategy]
@@ -85,4 +92,8 @@ for i in np.arange(float(sys.argv[1]), float(sys.argv[2]), float(sys.argv[3])):
 for p in processes:
     p.join()
 while not result_queue.empty():
-    print(result_queue.get())
+    res = result_queue.get()
+    print(res)
+    with open('results.csv', 'a') as f:
+        csv_writer = csv.writer(f)
+        csv_writer.writerow(res)
