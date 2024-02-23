@@ -176,6 +176,13 @@ class Planner:
             res[resource] = (occupation - average_occupation)**2
         return res
     
+    def get_weighted_resource_fairness(self, resource_fairness):
+        res = dict()
+        for resource, resource_fairness in resource_fairness.items():
+            resource_availability = self.resource_active_time[resource]
+            res[resource] = resource_availability * resource_fairness
+        return res
+    
     def get_current_loss(self):
         time_loss = self.total_cycle_time
         for case_start_time in self.case_start.values():
@@ -183,9 +190,11 @@ class Planner:
         
         occupations = self.get_resource_occupations()
         fairness = self.get_resource_fairness(occupations)
+        weighted_fairness = self.get_weighted_resource_fairness(fairness)
         return (time_loss / self.cases_completed if self.cases_completed else time_loss,
-              sum(occupations.values()) / len(occupations) if len(occupations) else sum(occupations.values()),
-              sum(fairness.values()) / len(fairness) if len(fairness) else sum(fairness.values())
+              sum(occupations.values()) / len(occupations) if len(occupations) else 0,
+              sum(fairness.values()) / len(fairness) if len(fairness) else 0,
+              sum(weighted_fairness.values()) / len(weighted_fairness) if len(weighted_fairness) else 0
         )
 
     def case_arival(self, event):
