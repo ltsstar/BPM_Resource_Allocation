@@ -10,6 +10,9 @@ class ParkPolicy(Policy):
         self.predictor = predictor
         self.task_type_occurrences = task_type_occurrences
 
+        self.num_postponed = 0
+        self.num_allocated = 0
+
     def get_next_tasks(self, unassigned_tasks, task_costs):
         next_tasks = []
         next_task_penalties = dict()
@@ -78,4 +81,10 @@ class ParkPolicy(Policy):
         for task_i, resource_i in zip(task_ind, resource_ind):
             selected.append((swaped_tasks_dict[task_i], swaped_resources_dict[resource_i]))
 
-        return self.prune_invalid_assignments(selected, available_resources, resource_pool, unassigned_tasks)
+        selected_size = len(selected)
+        task_assignment =  self.prune_invalid_assignments(selected, available_resources, resource_pool, unassigned_tasks)
+        assignment_size = len(task_assignment)
+        self.num_allocated += assignment_size
+        self.num_postponed += selected_size - assignment_size
+
+        return task_assignment
