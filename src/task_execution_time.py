@@ -103,13 +103,57 @@ class ExecutionTimeModel:
         self.predict_cache[task.case_id][hashed_data] = res
         return res
     
-    def predict_multiple(self, unassigned_tasks, resource_pool, task_type_occurrences):
-        results = dict()
+
+    def __predict_multiple_from_df(self, to_predict, to_normalize_data, to_standardize_data,
+                                   to_onehot_data, task_type_occurrences,
+                                   results = dict()):
+        normalize_data_df = pd.DataFrame(to_normalize_data, columns=self._rest_columns)
+        normalized_data = self._normalizer.transform(normalize_data_df)
+        standardized_data_df = pd.DataFrame(to_standardize_data, columns=self._standardization_columns)
+        standardized_data = self._standarizer.transform(standardized_data_df)
+        onehot_data_df = pd.DataFrame(to_onehot_data, columns=self._onehot_columns)
+        onehot_data = self._encoder.transform(onehot_data_df)
+        x = np.concatenate((normalized_data, standardized_data, onehot_data), axis=1)
+        y = self._model(x, training=False)
+
+        for i, idx in enumerate(to_predict):
+            res = max(0.0, float(y[i][0]))
+            results[idx] = res
+            case_id = idx[0].case_id
+            hash_value = self._hash_data(idx[0], idx[1], task_type_occurrences[case_id])
+            self.predict_cache[case_id][hash_value] = res
+        return results
+
+
+    def predict_multiple_filtered(self, unassigned_tasks, resources, resource_pool, task_type_occurrences):
         to_predict = []
         to_normalize_data = []
         to_standardize_data = []
         to_onehot_data = []
+        results = dict()
+        for task in unassigned_tasks:
+            for resource in resources:
+                if resource in resource_pool[task.task_type]:
+                    hashed_data = self._hash_data(task, resource, task_type_occurrences[task.case_id])
+                    if hashed_data in self.predict_cache[task.case_id]:
+                        results[(task, resource)] = self.predict_cache[task.case_id][hashed_data]
+                    else:
+                        to_normalize_data.append(list(task_type_occurrences[task.case_id].values()))
+                        to_standardize_data.append([task.data['RequestedAmount']])
+                        to_onehot_data.append([task.task_type, resource, task.data['ApplicationType'], task.data['LoanGoal']])
+                        to_predict.append((task, resource))
+        if to_predict:
+            results = self.__predict_multiple_from_df(to_predict, to_normalize_data, to_standardize_data,
+                                            to_onehot_data, task_type_occurrences, results)
 
+        return results
+    
+    def predict_multiple(self, unassigned_tasks, resource_pool, task_type_occurrences):
+        to_predict = []
+        to_normalize_data = []
+        to_standardize_data = []
+        to_onehot_data = []
+        results = dict()
         for task in unassigned_tasks:
             for resource in resource_pool[task.task_type]:
                 hashed_data = self._hash_data(task, resource, task_type_occurrences[task.case_id])
@@ -123,21 +167,9 @@ class ExecutionTimeModel:
                     to_predict.append((task, resource))
 
         if to_predict:
-            normalize_data_df = pd.DataFrame(to_normalize_data, columns=self._rest_columns)
-            normalized_data = self._normalizer.transform(normalize_data_df)
-            standardized_data_df = pd.DataFrame(to_standardize_data, columns=self._standardization_columns)
-            standardized_data = self._standarizer.transform(standardized_data_df)
-            onehot_data_df = pd.DataFrame(to_onehot_data, columns=self._onehot_columns)
-            onehot_data = self._encoder.transform(onehot_data_df)
-            x = np.concatenate((normalized_data, standardized_data, onehot_data), axis=1)
-            y = self._model(x, training=False)
-
-            for i, idx in enumerate(to_predict):
-                res = max(0.0, float(y[i][0]))
-                results[idx] = res
-                case_id = idx[0].case_id
-                hash_value = self._hash_data(idx[0], idx[1], task_type_occurrences[case_id])
-                self.predict_cache[case_id][hash_value] = res
+            results = self.__predict_multiple_from_df(to_predict, to_normalize_data, to_standardize_data,
+                                            to_onehot_data, task_type_occurrences,
+                                            results)
 
         return results
     

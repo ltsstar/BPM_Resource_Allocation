@@ -5,6 +5,7 @@ from policy import *
 from ilp_policy import UnrelatedParallelMachinesSchedulingPolicy
 from ilp_policy_non_assign import UnrelatedParallelMachinesSchedulingNonAssignPolicy
 from ilp_policy_non_assign_2 import UnrelatedParallelMachinesSchedulingNonAssignPolicy2
+from park_policy import *
 from task_execution_time import ExecutionTimeModel
 from hungarian_policy import HungarianMultiObjectivePolicy
 
@@ -34,12 +35,20 @@ def run_simulator(days, objective, delta, result_queue, selection_strategy=None)
         policy = HungarianMultiObjectivePolicy(1, 0, 0, delta)
     elif objective == "MILP":
         policy = UnrelatedParallelMachinesSchedulingNonAssignPolicy2(1, 0, 0, delta, selection_strategy)
+    elif objective == "Park":
+        policy = None
+
     my_planner = Planner(prediction_model, warm_up_policy, warm_up_time, policy,
                         predict_multiple=True,
                         hour_timeout=3600,
                         debug=True)
 
     simulator = Simulator(my_planner)
+
+    if objective == "Park":
+        policy = ParkPolicy(simulator.problem.next_task_distribution, my_planner.predictor, my_planner.task_type_occurrences)
+        my_planner.policy = policy
+
     simulator_result = simulator.run(simulation_time)
     times = (datetime.fromtimestamp(real_start_time).strftime("%Y-%m-%d %H:%M:%S"),
              datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d %H:%M:%S"),
