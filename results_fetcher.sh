@@ -27,6 +27,7 @@ while IFS=', ' read -r name; do
 
   # Construct the source and destination file paths
   source_file="$SOURCE_DIR/BPO_Batching/results.csv"
+  out_source_file="$SOURCE_DIR/BPO_Batching/out.txt"
   dest_file="$DEST_DIR/$name"
 
   # Copy files using scp, handle errors
@@ -37,6 +38,12 @@ while IFS=', ' read -r name; do
     #exit 1
   fi
 
+  if sshpass -p i17 scp -o ConnectTimeout=1 -o ConnectionAttempts=1 "i17pclab@$name:$out_source_file" "$dest_file.out"; then
+    echo "Copied files from $name to $dest_file.out"
+  else
+    echo "Error copying files from $name.out"
+    #exit 1
+  fi
 done < "$IP_LIST"
 
 echo "Finished copying files."
