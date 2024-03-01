@@ -261,6 +261,8 @@ class UnrelatedParallelMachinesSchedulingNonAssignPolicy2(Policy):
                 selected_task = sorted(tasks, key=lambda task: solver.Value(task.duration))[0].task
             elif self.selection_strategy == 'slowest':
                 selected_task = sorted(tasks, key=lambda task: solver.Value(task.duration))[-1].task
+            elif self.selection_strategy == 'EIF':
+                selected_task = sorted(tasks, key=lambda task: swaped_tasks_dict[task.task].case_id)[0].task
             elif self.selection_strategy == 'random':
                 selected_task = random.choice(tasks).task
             decoded_task = swaped_tasks_dict[selected_task]
