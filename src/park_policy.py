@@ -84,7 +84,7 @@ class ParkPolicy(Policy):
         selected_size = len(selected)
         task_assignment =  self.prune_invalid_assignments(selected, available_resources, resource_pool, unassigned_tasks)
         assignment_size = len(task_assignment)
-        self.num_allocated += assignment_size
+        self.num_allocated += selected_size
         self.num_postponed += selected_size - assignment_size
 
         return task_assignment
