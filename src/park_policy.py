@@ -1,5 +1,6 @@
 import numpy as np
 import scipy
+from ortools.graph.python import min_cost_flow
 import copy
 
 from policy import Policy
@@ -34,6 +35,40 @@ class ParkPolicy(Policy):
         task_durations = dict()
         self.predictor.predict(next_tasks, resource_pool)
 
+    def do_matching(self, relevant_task_data, num_tasks, num_resources, reduction = 0):
+        start_nodes = [0 for i in range(num_resources)]
+        end_nodes = [i+1 for i in range(num_resources)]
+        capacities = [1 for i in range(num_resources)]
+        costs = [0 for i in range(num_resources)]
+        for task_ix, resource_ix, d in relevant_task_data:
+            start_nodes += [resource_ix+1]
+            end_nodes += [num_resources+1+task_ix]
+            capacities += [1]
+            costs += [d]
+
+        start_nodes += [num_resources+1+task_ix for task_ix in range(num_tasks)]
+        end_nodes += [num_tasks+num_resources+1 for task_ix in range(num_tasks)]
+        capacities += [1 for i in range(num_tasks)]
+        costs += [0 for i in range(num_tasks)]
+
+        supplies = [min(num_tasks, num_resources) - reduction] +\
+                    [0 for i in range(num_tasks + num_resources - 1)] +\
+                    [-min(num_tasks, num_resources) + reduction]
+
+        smcf = min_cost_flow.SimpleMinCostFlow()
+
+        # Add each arc.
+        for i in range(len(start_nodes)):
+            smcf.add_arc_with_capacity_and_unit_cost(
+                start_nodes[i], end_nodes[i], capacities[i], costs[i]
+            )
+        # Add node supplies.
+        for i in range(len(supplies)):
+            smcf.set_node_supply(i, supplies[i])
+
+        status = smcf.solve()
+        return smcf, status
+
     def allocate(self, unassigned_tasks, available_resources, resource_pool, trd,
                  occupations, fairness, task_costs, working_resources, current_time):
         relevant_resources = set(available_resources) | set(working_resources.keys())
@@ -44,7 +79,6 @@ class ParkPolicy(Policy):
 
         #next_task_data, next_task_encoding, next_resource_encoding = self.get_task_data_from_trd(next_task_rd)
 
-        all_trd = trd | next_task_rd
         # filter trd resources by available + working resources
         relevant_trd = dict()
         for (task, resource), duration in trd.items():
@@ -68,18 +102,25 @@ class ParkPolicy(Policy):
         swaped_tasks_dict = {v : k for k, v in relevant_task_encoding.items()}
         swaped_resources_dict = {v : k for k, v in relevant_resources_encoding.items()}
 
-        # tasks x (resources + dummy resources)
-        task_np = np.full((len(swaped_tasks_dict), len(swaped_resources_dict)),
-                          np.inf,
-                          dtype=np.double)
-        
-        for x, y, v in relevant_task_data:
-            task_np[x,y] = v
+        num_resources = len(swaped_resources_dict)
+        num_tasks = len(swaped_tasks_dict)
 
-        task_ind, resource_ind = scipy.optimize.linear_sum_assignment(task_np)
+        smcf, status = self.do_matching(relevant_task_data, num_tasks, num_resources)
+        # Sometimes there exists no matching for all resources
+        # e.g. because all tasks can only be conduced by one resource
+        # Therefore reduce number of supplies iteratively
+        r = 1
+        while status != smcf.OPTIMAL:
+            smcf, status = self.do_matching(relevant_task_data, num_tasks, num_resources, r)
+            r += 1
         selected = []
-        for task_i, resource_i in zip(task_ind, resource_ind):
-            selected.append((swaped_tasks_dict[task_i], swaped_resources_dict[resource_i]))
+
+        for arc in range(smcf.num_arcs()):
+            if smcf.tail(arc) != 0 and smcf.head(arc) != num_tasks+num_resources+1:
+                if smcf.flow(arc) > 0:
+                    selected.append((swaped_tasks_dict[smcf.head(arc) - num_resources - 1],
+                                        swaped_resources_dict[smcf.tail(arc) - 1]))
+
 
         selected_size = len(selected)
         task_assignment =  self.prune_invalid_assignments(selected, available_resources, resource_pool, unassigned_tasks)
