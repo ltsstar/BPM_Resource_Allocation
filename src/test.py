@@ -5,6 +5,7 @@ from policy import *
 from ilp_policy import UnrelatedParallelMachinesSchedulingPolicy
 from ilp_policy_non_assign import UnrelatedParallelMachinesSchedulingNonAssignPolicy
 from ilp_policy_non_assign_2 import UnrelatedParallelMachinesSchedulingNonAssignPolicy2
+from ilp_policy_2_batch import UnrelatedParallelMachinesSchedulingBatchPolicy2
 from least_loaded_qualified_person_policy import LeastLoadedQualifiedPersonPolicy
 from round_robin_policy import RoundRobinPolicy
 from park_policy import *
@@ -37,6 +38,9 @@ def run_simulator(days, objective, delta, result_queue, selection_strategy=None)
         policy = HungarianMultiObjectivePolicy(1, 0, 0, delta)
     elif objective == "MILP":
         policy = UnrelatedParallelMachinesSchedulingNonAssignPolicy2(1, 0, 0, delta, selection_strategy)
+    elif objective == "MILPBatch":
+        # use delta for batch size
+        policy = UnrelatedParallelMachinesSchedulingBatchPolicy2(1, 0, 0, 0, selection_strategy, delta) 
     elif objective == "Park":
         policy = None
     elif objective == "RoundRobin":

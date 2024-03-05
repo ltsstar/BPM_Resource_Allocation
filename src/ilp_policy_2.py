@@ -8,12 +8,10 @@ import random
 from policy import Policy, GreedyParallelMachinesSchedulingPolicy
 from hungarian_policy import HungarianMultiObjectivePolicy
 
-
-class UnrelatedMachinesSchedulingNonAssign2:
-    def __init__(self, task_data, non_assign_cost, 
+class UnrelatedMachinesScheduling2:
+    def __init__(self, task_data, 
                  machines_start, delta, max_value=None):
         self.task_data = task_data
-        self.non_assign_cost = non_assign_cost
         self.machines_start = machines_start
         self.delta = delta
         self.__define_model(max_value)
@@ -27,9 +25,7 @@ class UnrelatedMachinesSchedulingNonAssign2:
         # Creates job intervals and add to the corresponding machine lists.
         self.all_tasks = {}
         self.task_assigned_machines = collections.defaultdict(list)
-        self.task_non_assign = {}
         self.machine_durations = {}
-        self.non_assign_cost_variables = []
         self.assignments = collections.defaultdict(list)
         self.machines = collections.defaultdict(list)
         self.intervals = collections.defaultdict(list)
@@ -100,25 +96,12 @@ class UnrelatedMachinesSchedulingNonAssign2:
             self.machine_durations[machine] = machine_duration
 
 
-
-        #Add non assign
-        for task, task_data in self.task_assigned_machines.items():
-            non_assign_variable = self.model.NewBoolVar('non_assigned_' + str(task))
-            self.task_non_assign[task] = non_assign_variable
-            non_assign_cost_variable = self.model.NewIntVar(0, self.non_assign_cost[task], 'non_assigned_cost_' + str(task))
-            self.model.AddMultiplicationEquality(non_assign_cost_variable, [non_assign_variable, self.non_assign_cost[task]])
-            self.non_assign_cost_variables.append(non_assign_cost_variable)
-            #print(non_assign_cost_variable, self.non_assign_cost[task])
-
-
         #Constraint 2: All tasks must be assigned to exactly one machine
-        #               or to -non assign-
         tasks_count = 1+ max(task[0] for task in self.task_data)
         all_tasks = range(tasks_count)
         for task in all_tasks:
             #sum of assignment variable of task must be one
-            self.model.Add(cp_model.LinearExpr.Sum(self.task_assigned_machines[task]) +
-                           self.task_non_assign[task] == 1)
+            self.model.Add(cp_model.LinearExpr.Sum(self.task_assigned_machines[task]) == 1)
 
     
     def __define_objective(self):
@@ -129,9 +112,6 @@ class UnrelatedMachinesSchedulingNonAssign2:
             [machine_duration_var for machine, machine_duration_var in self.machine_durations.items()] +
             [max(self.machines_start.values())]
         )
-        # Non Assign objective:
-        self.non_assign_sum = self.model.NewIntVar(0, sum(self.non_assign_cost.values()), 'non_assign_sum')
-        self.model.Add(cp_model.LinearExpr.Sum(self.non_assign_cost_variables) == self.non_assign_sum)
 
         # Deviation from makespan objective:
         self.makespan_deviations = []
@@ -143,7 +123,7 @@ class UnrelatedMachinesSchedulingNonAssign2:
         self.model.Add(cp_model.LinearExpr.Sum(self.makespan_deviations) == self.deviation_var)
 
         obj_var = self.model.NewIntVar(self.horizon[0], self.horizon[1] * len(self.machines) + self.horizon[1] * (len(self.machines) - 1), 'obj')
-        self.model.Add((self.duration_var + self.non_assign_sum) * len(self.machines) + self.deviation_var == obj_var)
+        self.model.Add((self.duration_var) * len(self.machines) + self.deviation_var == obj_var)
         self.model.Minimize(obj_var)
 
     def solve(self, solver=cp_model.CpSolver()):
@@ -151,7 +131,7 @@ class UnrelatedMachinesSchedulingNonAssign2:
         return (solver, status)
 
 
-class UnrelatedParallelMachinesSchedulingNonAssignPolicy2(Policy):
+class UnrelatedParallelMachinesSchedulingPolicy2(Policy):
     def __init__(self, alpha, beta, gamma, delta, selection_strategy):
         self.alpha = alpha     # time
         self.beta  = beta      # occupation
@@ -176,12 +156,6 @@ class UnrelatedParallelMachinesSchedulingNonAssignPolicy2(Policy):
         swaped_tasks_dict = {v : k for k, v in task_encoding.items()}
         swaped_resources_dict = {v : k for k, v in resource_encoding.items()}
 
-        task_costs = self.factor_task_costs(task_costs.copy(), factor=3600*self.delta)
-        encoded_task_costs = dict()
-        for task, cost in task_costs.items():
-            if task in task_encoding:
-                encoded_task_costs[task_encoding[task]] = cost
-
         # get encoded machines start
         machines_start = {}
         for resource, resource_enc in resource_encoding.items():
@@ -193,8 +167,7 @@ class UnrelatedParallelMachinesSchedulingNonAssignPolicy2(Policy):
         #print(machines_start)
 
         # Creates the solver and solve.
-        model = UnrelatedMachinesSchedulingNonAssign2(task_data, encoded_task_costs,
-                                                     machines_start, self.delta)
+        model = UnrelatedMachinesScheduling2(task_data, machines_start, self.delta)
         start_time = time.time()
 
         solver = cp_model.CpSolver()
@@ -227,20 +200,8 @@ class UnrelatedParallelMachinesSchedulingNonAssignPolicy2(Policy):
             print('2 Optimal', round(duration, 2), len(relevant_resources), len(unassigned_tasks), len(trd),
                       solver.ObjectiveValue(), model.horizon)
         print(solver.Value(model.duration_var)*len(relevant_resources),
-              solver.Value(model.non_assign_sum)*len(relevant_resources),
               solver.Value(model.deviation_var),
               solver.ObjectiveValue())
-
-        #postponed_vars = []
-        for task, postponed_var in model.task_non_assign.items():
-            if solver.Value(postponed_var):
-                #postponed_vars.append(postponed_var)
-                #print('Postponed:', postponed_var)
-                self.num_postponed += 1
-            else:
-                pass
-                #print('Not postponed:', postponed_var)
-        #print('Postponed vars:', postponed_vars)
 
         machine_tasks = collections.defaultdict(list)
         for machine, machine_assignments in model.assignments.items():
@@ -269,4 +230,3 @@ class UnrelatedParallelMachinesSchedulingNonAssignPolicy2(Policy):
 
         res = self.prune_invalid_assignments(selected, available_resources, resource_pool, unassigned_tasks)
         return res
-        #return selected
