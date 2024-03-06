@@ -146,7 +146,7 @@ class UnrelatedParallelMachinesSchedulingPolicy2(Policy):
 
         self.back_up_policy = HungarianMultiObjectivePolicy(alpha, beta, gamma, delta)
 
-    def allocate(self, unassigned_tasks, available_resources, resource_pool, trd,
+    def allocate_all(self, unassigned_tasks, available_resources, resource_pool, trd,
                  occupations, fairness, task_costs, working_resources, current_time):
         relevant_resources = set(available_resources) | set(working_resources.keys())
         trd = self.prune_trd(trd, unassigned_tasks, relevant_resources)
@@ -209,8 +209,17 @@ class UnrelatedParallelMachinesSchedulingPolicy2(Policy):
                 if solver.Value(machine_assignment.assigned_var):
                     machine_tasks[machine].append(machine_assignment)
         #print('Assignments', machine_tasks)
-        selected = []
+        selected = dict()
+        for machine, tasks in machine_tasks.items():
+            selected[swaped_resources_dict[machine]] = [(swaped_tasks_dict[task.task], solver.Value(task.duration)) for task in tasks]
+        return selected
+    
+    def allocate(self, unassigned_tasks, available_resources, resource_pool, trd,
+                 occupations, fairness, task_costs, working_resources, current_time):
         
+        selected = self.allocate_all(unassigned_tasks, available_resources, resource_pool, trd,
+                 occupations, fairness, task_costs, working_resources, current_time)
+
         # select first task (for every resource)
         for machine, tasks in machine_tasks.items():
             decoded_resource = swaped_resources_dict[machine]

@@ -38,8 +38,8 @@ def run_simulator(days, objective, delta, result_queue, selection_strategy=None)
         policy = HungarianMultiObjectivePolicy(1, 0, 0, delta)
     elif objective == "MILP":
         policy = UnrelatedParallelMachinesSchedulingNonAssignPolicy2(1, 0, 0, delta, selection_strategy)
-    elif objective == "MILPBatch":
-        # use delta for batch size
+    elif objective == "KBatch":
+        # use delta for batch size k
         policy = UnrelatedParallelMachinesSchedulingBatchPolicy2(1, 0, 0, 0, selection_strategy, delta) 
     elif objective == "Park":
         policy = None
