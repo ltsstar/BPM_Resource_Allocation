@@ -43,6 +43,7 @@ class UnrelatedParallelMachinesSchedulingBatchPolicy2(Policy):
         
         allocations = []
         allocated_resources = []
+        # allocate according to resource queues
         for available_resource in available_resources:
             if len(self.resources_queues[available_resource]):
                 next_task = self.resources_queues[available_resource].pop(0)
@@ -55,7 +56,10 @@ class UnrelatedParallelMachinesSchedulingBatchPolicy2(Policy):
             if resource not in available_resources and resource not in working_resources:
                 self.resources_queues[resource] = []
 
+        # obtain tasks that need to be allocated to resource queues
         real_unassigned_tasks = self.get_real_unassigned_tasks(unassigned_tasks)
+
+        # allocate tasks when batch size has been reached
         if len(real_unassigned_tasks) >= self.batch_size:
             schedule = self.policy.allocate_all(real_unassigned_tasks, available_resources, resource_pool, trd,
                                         occupations, fairness, task_costs, working_resources, current_time
@@ -65,10 +69,11 @@ class UnrelatedParallelMachinesSchedulingBatchPolicy2(Policy):
                     tasks_sorted = list(zip(*sorted(tasks, key=lambda t : t[1])))[0]
                 self.resources_queues[resource] += tasks_sorted
 
+        # if still available resources that now have gotten new tasks, allocate them
         for available_resource in available_resources:
-            if available_resources not in available_resources:
+            if available_resource not in allocated_resources:
                 if len(self.resources_queues[available_resource]):
                     next_task = self.resources_queues[available_resource].pop(0)
                     allocations.append((next_task, available_resource))
 
-        return self.prune_invalid_assignments(allocations, available_resources, resource_pool, unassigned_tasks)
+        return allocations
