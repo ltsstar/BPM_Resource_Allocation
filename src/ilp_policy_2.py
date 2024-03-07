@@ -138,6 +138,7 @@ class UnrelatedParallelMachinesSchedulingPolicy2(Policy):
         self.gamma = gamma     # fairness
         self.delta = delta     # non-allocation cost factor
         self.selection_strategy = selection_strategy
+        self.max_time = 2
 
         self.num_postponed = 0
         self.num_allocated = 0
@@ -151,7 +152,7 @@ class UnrelatedParallelMachinesSchedulingPolicy2(Policy):
         relevant_resources = set(available_resources) | set(working_resources.keys())
         trd = self.prune_trd(trd, unassigned_tasks, relevant_resources)
         if not trd:
-            return []
+            return {}
         task_data, task_encoding, resource_encoding = self.get_task_data_from_trd(trd)
         swaped_tasks_dict = {v : k for k, v in task_encoding.items()}
         swaped_resources_dict = {v : k for k, v in resource_encoding.items()}
@@ -177,7 +178,7 @@ class UnrelatedParallelMachinesSchedulingPolicy2(Policy):
             solver.log_callback = logging.info
 
         # Sets a time limit of 10 seconds.
-        solver.parameters.max_time_in_seconds = 2.0
+        solver.parameters.max_time_in_seconds = self.max_time
 
         #model.model.ExportToFile('model.pd.txt')
         status = solver.Solve(model.model)
@@ -193,8 +194,11 @@ class UnrelatedParallelMachinesSchedulingPolicy2(Policy):
                 self.no_solution += 1
                 print('2 No solution', round(duration, 2), len(relevant_resources), len(unassigned_tasks), len(trd),
                       model.horizon)
-                return self.back_up_policy.allocate(unassigned_tasks, available_resources, resource_pool, trd,
-                        occupations, fairness, task_costs, working_resources, current_time)
+                print('retry')
+                self.max_time += 1
+                return self.allocate_all(unassigned_tasks, available_resources, resource_pool,
+                                         trd, occupations, fairness, task_costs,
+                                         working_resources, current_time)
         else:
             self.optimal += 1
             print('2 Optimal', round(duration, 2), len(relevant_resources), len(unassigned_tasks), len(trd),
