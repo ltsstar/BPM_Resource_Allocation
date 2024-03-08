@@ -47,6 +47,8 @@ def run_simulator(days, objective, delta, result_queue, selection_strategy=None)
         policy = RoundRobinPolicy()
     elif objective == "LLQP":
         policy = LeastLoadedQualifiedPersonPolicy()
+    elif objective == "Random":
+        policy = RandomPolicy()
 
     my_planner = Planner(prediction_model, warm_up_policy, warm_up_time, policy,
                         predict_multiple=True,
