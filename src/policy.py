@@ -48,6 +48,10 @@ class Policy:
 
 
 class RandomPolicy(Policy):
+    def __init__(self):
+        self.num_allocated = 0
+        self.num_postponed = 0
+
     def allocate(self, unassigned_tasks, available_resources, resource_pool, trd,
                  occupations, fairness, task_costs, working_resources, current_time):
         random.shuffle(unassigned_tasks)
@@ -61,6 +65,8 @@ class RandomPolicy(Policy):
                     it_resources.remove(resource)
                     assignments.append((task, resource))
                     break
+
+        self.num_allocated += len(assignments)
         return assignments
 
 class FastestTaskFirst(Policy):
