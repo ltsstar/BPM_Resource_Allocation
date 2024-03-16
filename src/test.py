@@ -7,7 +7,7 @@ from ilp_policy_non_assign import UnrelatedParallelMachinesSchedulingNonAssignPo
 from ilp_policy_non_assign_2 import UnrelatedParallelMachinesSchedulingNonAssignPolicy2
 from ilp_policy_2_batch import UnrelatedParallelMachinesSchedulingBatchPolicy2
 from least_loaded_qualified_person_policy import LeastLoadedQualifiedPersonPolicy
-from russel_policies import RoundRobinPolicy
+from russel_policies import *
 from park_policy import *
 from task_execution_time import ExecutionTimeModel
 from hungarian_policy import HungarianMultiObjectivePolicy
@@ -47,6 +47,8 @@ def run_simulator(days, objective, delta, result_queue, selection_strategy=None)
         policy = RoundRobinPolicy()
     elif objective == "LLQP":
         policy = LeastLoadedQualifiedPersonPolicy()
+    elif objective == "ShortestQueue":
+        policy = ShortestQueuePolicy()
     elif objective == "Random":
         policy = RandomPolicy()
 

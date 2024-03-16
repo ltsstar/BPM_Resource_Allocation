@@ -46,29 +46,6 @@ class Policy:
                 pruned_trd[(task, resource)] = trd[(task, resource)]
         return pruned_trd
 
-
-class RandomPolicy(Policy):
-    def __init__(self):
-        self.num_allocated = 0
-        self.num_postponed = 0
-
-    def allocate(self, unassigned_tasks, available_resources, resource_pool, trd,
-                 occupations, fairness, task_costs, working_resources, current_time):
-        random.shuffle(unassigned_tasks)
-        it_resources = list(available_resources)
-        random.shuffle(it_resources)
-        assignments = []
-        # assign the first unassigned task to the first available resource, the second task to the second resource, etc.
-        for task in unassigned_tasks:
-            for resource in it_resources:
-                if resource in resource_pool[task.task_type]:
-                    it_resources.remove(resource)
-                    assignments.append((task, resource))
-                    break
-
-        self.num_allocated += len(assignments)
-        return assignments
-
 class FastestTaskFirst(Policy):
     def allocate(self, unassigned_tasks, available_resources, resource_pool, trd,
                  occupations, fairness, task_costs, working_resources, current_time):

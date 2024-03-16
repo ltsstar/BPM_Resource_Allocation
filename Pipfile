@@ -17,6 +17,8 @@ keras = "*"
 tensorflow = {extras = ["and-cuda"], version = "*"}
 memory-profiler = "*"
 pympler = "*"
+pm4py = "*"
+seaborn = "*"
 
 [dev-packages]
 ipykernel = "*"

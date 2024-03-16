@@ -8,7 +8,7 @@
             "name": "Single Test",
             "type": "debugpy",
             "request": "launch",
-            "program": "single_test.py",
+            "program": "src/single_test.py",
             "console": "integratedTerminal"
         }
         {

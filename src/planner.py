@@ -205,6 +205,7 @@ class Planner:
 
     def start_task(self, event):
         # resource occupation estimation - later update
+        # may result in resource occupation above 100% eventually
         self.resource_occupation[event.resource] += self.working_resources[event.resource][1]
 
     def complete_task(self, event):
