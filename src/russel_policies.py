@@ -73,8 +73,9 @@ class RandomPolicy(Policy):
         self.num_allocated = 0
         self.num_postponed = 0
 
-    def allocate(self, unassigned_tasks, available_resources, resource_pool, trd,
-                 occupations, fairness, task_costs, working_resources, current_time):
+    def allocate(self, unassigned_tasks, available_resources, resource_pool, trd=None,
+                 occupations=None, fairness=None, task_costs=None, working_resources=None,
+                 current_time=None):
         random.shuffle(unassigned_tasks)
         it_resources = list(available_resources)
         random.shuffle(it_resources)

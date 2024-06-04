@@ -11,7 +11,8 @@ import math
 #TRACKER = SummaryTracker()
 
 class Planner:
-    activity_names = ['W_Complete application', 'W_Call after offers', 'W_Validate application', 'W_Call incomplete files', 'W_Handle leads', 'W_Assess potential fraud', 'W_Shortened completion']
+    #activity_names = ['W_Complete application', 'W_Call after offers', 'W_Validate application', 'W_Call incomplete files', 'W_Handle leads', 'W_Assess potential fraud', 'W_Shortened completion']
+    activity_names = ['Create Purchase Requisition', 'Create Request for Quotation', 'Analyze Request for Quotation', 'Send Request for Quotation to Supplier', 'Create Quotation comparison Map', 'Analyze Quotation Comparison Map', 'Choose best option', 'Settle Conditions With Supplier', 'Create Purchase Order', 'Confirm Purchase Order', 'Deliver Goods Services', 'Release Purchase Order', 'Approve Purchase Order for payment', 'Send Invoice', "Release Supplier's Invoice", "Authorize Supplier's Invoice payment", 'Pay Invoice', 'Amend Request for Quotation', 'Settle Dispute With Supplier', 'Analyze Purchase Requisition', 'Amend Purchase Requisition']
     initial_time = datetime.datetime(2020, 1, 1)
     time_format = "%Y-%m-%d %H:%M:%S.%f"
 
@@ -62,11 +63,7 @@ class Planner:
         if self.is_warm_up:
             assignments = self.warm_up_policy.allocate(unassigned_tasks,
                                                available_resources,
-                                               resource_pool,
-                                               None,
-                                               None,
-                                               None,
-                                               None)
+                                               resource_pool)
         else:
             # Predict task x resource durations
             trds, task_costs = self.predictor.predict(unassigned_tasks,

@@ -8,12 +8,36 @@ from sklearn.neural_network import MLPRegressor
 
 
 class DistributionType(Enum):
+    """An enumeration for different types of probability distribution."""
     CATEGORICAL = auto()
+    """A categorical distribution.
+
+    :meta hide-value:"""
+
     GAMMA = auto()
+    """A gamma distribution.
+
+    :meta hide-value:"""
+
     NORMAL = auto()
+    """A normal distribution.
+
+    :meta hide-value:"""
+
     BETA = auto()
+    """A beta distribution.
+
+    :meta hide-value:"""
+
     ERLANG = auto()
+    """An Erlang distribution.
+
+    :meta hide-value:"""
+
     UNIFORM = auto()
+    """A uniform distribution.
+
+    :meta hide-value:"""
 
 
 class CategoricalDistribution:
@@ -131,20 +155,92 @@ class StratifiedNumericDistribution:
         self._onehot_columns = []
         self._standardization_columns = []
         self._rest_columns = []
+
         self._normalizer = None
         self._standardizer = None
         self._encoder = None
         self._regressor = None
+
         self._stratifier = ''
         self._stratified_errors = dict()
         self._overall_mean = 0
 
+    # onehot_columns will be onehot encoded, standardization_columns will be Z-Score normalized
+    # all other features will be minmax normalized.
+    # The maximum standard deviation of the error can be given as a fraction to the mean predicted value.
+    # If the mean predicted value is m, the standard deviation of the error will be the min(actual error std, mean * max_error_std).
+    # The max_error_std is given as a distribution itself, from which the max error is drawn for each strata.
+    # For a max_error_std of None, no maximum will be set.
+    def learn(self, data, target_column, feature_columns, onehot_columns, standardization_columns, stratifier, max_error_std):
+        x = data[feature_columns]
+        y = data[target_column]
+
+        self._normalizer = MinMaxScaler()
+        self._standardizer = StandardScaler()
+        self._encoder = OneHotEncoder(sparse_output=False)
+
+        self._target_column = target_column
+        self._feature_columns = feature_columns
+        self._onehot_columns = onehot_columns
+        self._standardization_columns = standardization_columns
+        self._rest_columns = [col for col in feature_columns if
+                              col not in standardization_columns and col not in onehot_columns]
+
+        self._overall_mean = y.mean()
+
+        if self._standardization_columns:
+            standardized_data = self._standardizer.fit_transform(x[self._standardization_columns])
+        normalized_data = self._normalizer.fit_transform(x[self._rest_columns])
+        onehot_data = self._encoder.fit_transform(x[self._onehot_columns])
+
+        if self._standardization_columns:
+            x = np.concatenate([standardized_data, normalized_data, onehot_data], axis=1)
+        else:
+            x = np.concatenate([normalized_data, onehot_data], axis=1)
+
+
+        self._regressor = MLPRegressor(hidden_layer_sizes=(x.shape[1], int(x.shape[1] / 2), int(x.shape[1] / 4)),
+                                       activation='relu', solver='adam').fit(x, y)
+
+        # now calculate the errors
+        self._stratifier = stratifier
+        df_error = data[[self._stratifier]].copy()
+        df_error['y'] = data[target_column]
+        df_error['y_hat'] = list(self._regressor.predict(x))
+        df_error['error'] = df_error['y'] - df_error['y_hat']
+
+        overall_value = NormalDistribution()
+        overall_value.learn(list(df_error['error']))
+
+        possible_values = data[stratifier].unique()
+        for pv in possible_values:
+            self._stratified_errors[pv] = NormalDistribution()
+            stratified_errors = list(df_error[df_error[self._stratifier] == pv]['error'])
+            if len(stratified_errors) > 50:
+                self._stratified_errors[pv].learn(stratified_errors)
+            else:
+                self._stratified_errors[pv] = overall_value
+            if max_error_std is not None:
+                pv_mean = float(df_error[df_error[self._stratifier] == pv]['y'].mean())
+                pv_max_error_std = max_error_std.sample() * pv_mean
+                if self._stratified_errors[pv].std > pv_max_error_std:
+                    self._stratified_errors[pv] = NormalDistribution(0, pv_max_error_std)
+
+    # features is a dictionary that maps feature labels to lists of values
     def sample(self, features):
         data = pandas.DataFrame(features, index=[1])
-        standardized_data = self._standardizer.transform(data[self._standardization_columns])
+
+        if self._standardization_columns:
+            standardized_data = self._standardizer.transform(data[self._standardization_columns])
         normalized_data = self._normalizer.transform(data[self._rest_columns])
         onehot_data = self._encoder.transform(data[self._onehot_columns])
-        x = np.concatenate([standardized_data, normalized_data, onehot_data], axis=1)
+
+        if self._standardization_columns:
+            x = np.concatenate([standardized_data, normalized_data, onehot_data], axis=1)
+        else:
+            x = np.concatenate([normalized_data, onehot_data], axis=1)
+
+
         processing_time = self._regressor.predict(x)[0]
         if processing_time <= 0:
             processing_time = self._overall_mean

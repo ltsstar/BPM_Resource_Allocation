@@ -16,20 +16,20 @@ import multiprocessing
 import time
 
 prediction_model = ExecutionTimeModel()
-with open('prediction_model.pkl', 'rb') as file:
+with open('prediction_model_po.pkl', 'rb') as file:
     prediction_model = pickle.load(file)
 
 warm_up_policy = RandomPolicy()
 warm_up_time =  0
-simulation_time = 24*365
+simulation_time = 24*70
 
-def run_simulator(delta):
-    #policy = UnrelatedParallelMachinesSchedulingNonAssignPolicy2(1, 0, 0, delta, 'EIF')
+def run_simulator(delta, instance_file):
+    policy = UnrelatedParallelMachinesSchedulingNonAssignPolicy2(1, 0, 0, delta, 'EIF')
     #policy = HungarianMultiObjectivePolicy(1, 0, 0, delta)
     #policy = LeastLoadedQualifiedPersonPolicy()
     #policy = RoundRobinPolicy()
     #policy = UnrelatedParallelMachinesSchedulingBatchPolicy2(1, 0, 0, delta, 'fastest', 50)
-    policy = ShortestQueueAllocation()
+    #policy = ShortestQueueAllocation()
     my_planner = Planner(prediction_model,
                         warm_up_policy, warm_up_time,
                         policy,
@@ -37,7 +37,8 @@ def run_simulator(delta):
                         #hour_timeout=120,
                         debug=True)
 
-    simulator = Simulator(my_planner)
+    simulator = Simulator(my_planner, instance_file)
+    simulator.problem.interarrival_time._alpha /= 4.8 #reset
     #policy = ParkPolicy(simulator.problem.next_task_distribution, my_planner.predictor, my_planner.task_type_occurrences)
     #my_planner.policy = policy
 
@@ -51,5 +52,5 @@ def run_simulator(delta):
 
 
 
-res = run_simulator(1.2)
+res = run_simulator(1.4, 'data/po_problem.pickle')
 print(res)
