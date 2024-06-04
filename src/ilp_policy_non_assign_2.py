@@ -214,22 +214,22 @@ class UnrelatedParallelMachinesSchedulingNonAssignPolicy2(Policy):
         if status != cp_model.OPTIMAL:
             if status == cp_model.FEASIBLE:
                 self.feasible += 1
-                print('2 Feasible', round(duration, 2), len(relevant_resources), len(unassigned_tasks), len(trd),
-                      solver.ObjectiveValue(), model.horizon)
+                #print('2 Feasible', round(duration, 2), len(relevant_resources), len(unassigned_tasks), len(trd),
+                #    solver.ObjectiveValue(), model.horizon)
             else:
                 self.no_solution += 1
-                print('2 No solution', round(duration, 2), len(relevant_resources), len(unassigned_tasks), len(trd),
-                      model.horizon)
+                #print('2 No solution', round(duration, 2), len(relevant_resources), len(unassigned_tasks), len(trd),
+                #      model.horizon)
                 return self.back_up_policy.allocate(unassigned_tasks, available_resources, resource_pool, trd,
                         occupations, fairness, task_costs, working_resources, current_time)
         else:
             self.optimal += 1
-            print('2 Optimal', round(duration, 2), len(relevant_resources), len(unassigned_tasks), len(trd),
-                      solver.ObjectiveValue(), model.horizon)
-        print(solver.Value(model.duration_var)*len(relevant_resources),
-              solver.Value(model.non_assign_sum)*len(relevant_resources),
-              solver.Value(model.deviation_var),
-              solver.ObjectiveValue())
+            #print('2 Optimal', round(duration, 2), len(relevant_resources), len(unassigned_tasks), len(trd),
+            #          solver.ObjectiveValue(), model.horizon)
+        #print(solver.Value(model.duration_var)*len(relevant_resources),
+        #      solver.Value(model.non_assign_sum)*len(relevant_resources),
+        #      solver.Value(model.deviation_var),
+        #      solver.ObjectiveValue())
 
         #postponed_vars = []
         for task, postponed_var in model.task_non_assign.items():

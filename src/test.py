@@ -19,17 +19,22 @@ from datetime import datetime
 import csv
 import sys
 
-#import os
-#os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 
 
-def run_simulator(days, objective, delta, result_queue, selection_strategy=None):
+def run_simulator(problem, days, objective, delta, result_queue, selection_strategy=None):
     real_start_time = time.time()
     start_time = time.process_time()
     prediction_model = ExecutionTimeModel()
-    with open('prediction_model.pkl', 'rb') as file:
-        prediction_model = pickle.load(file)
+
+    if problem == 'BPIC':
+        with open('prediction_model.pkl', 'rb') as file:
+            prediction_model = pickle.load(file)
+    elif problem == 'PO':
+        with open('prediction_model_po.pkl', 'rb') as file:
+            prediction_model = pickle.load(file)
 
     warm_up_policy = RandomPolicy()
     warm_up_time =  0
@@ -56,8 +61,18 @@ def run_simulator(days, objective, delta, result_queue, selection_strategy=None)
                         predict_multiple=True,
                         hour_timeout=3600,
                         debug=True)
+    if problem == 'BPIC':
+        instance_file = 'data/BPI Challenge 2017 - instance.pickle'
+    elif problem == 'PO':
+        instance_file = 'data/po_problem.pickle'
 
-    simulator = Simulator(my_planner)
+    simulator = Simulator(my_planner, instance_file)
+
+    if problem == 'PO':
+        # reset arrival time for PO problem:
+        #   BPICs test data set arrival times were fitted with
+        #   a different method.
+        simulator.problem.interarrival_time._alpha /= 10
 
     if objective == "Park":
         policy = ParkPolicy(simulator.problem.next_task_distribution, my_planner.predictor, my_planner.task_type_occurrences)
@@ -93,6 +108,7 @@ result_queue = multiprocessing.Queue()
 alive_processes = []
 
 MAX_PROCESSES = int(sys.argv[6])
+problem = sys.argv[8]
 for i in np.arange(float(sys.argv[1]), float(sys.argv[2]), float(sys.argv[3])):
     alive_processes = get_alive_proceses(processes)
     while len(alive_processes) >= MAX_PROCESSES:
@@ -100,7 +116,7 @@ for i in np.arange(float(sys.argv[1]), float(sys.argv[2]), float(sys.argv[3])):
         alive_processes = get_alive_proceses(processes)
 
     selection_strategy = sys.argv[7]
-    p = multiprocessing.Process(target=run_simulator, args=(int(sys.argv[5]), sys.argv[4], i, result_queue, selection_strategy))
+    p = multiprocessing.Process(target=run_simulator, args=(problem, int(sys.argv[5]), sys.argv[4], i, result_queue, selection_strategy))
     p.start()
     print(i, 'Started')
     processes.append(p)
