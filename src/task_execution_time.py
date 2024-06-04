@@ -145,8 +145,7 @@ class ExecutionTimeModelPO(ExecutionTimeModel):
                         results[(task, resource)] = self.predict_cache[task.case_id][hashed_data]
                     else:
                         to_normalize_data.append(list(task_type_occurrences[task.case_id].values()))
-                        to_standardize_data.append([task.data['RequestedAmount']])
-                        to_onehot_data.append([task.task_type, resource, task.data['ApplicationType'], task.data['LoanGoal']])
+                        to_onehot_data.append([task.task_type, resource])
                         to_predict.append((task, resource))
         if to_predict:
             results = self.__predict_multiple_from_df(to_predict, to_normalize_data, to_standardize_data,
