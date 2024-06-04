@@ -254,3 +254,118 @@ class StratifiedNumericDistribution:
             return processing_time + error
         else:
             return processing_time
+
+class POTaskDurationDistribution:
+    def __init__(self):
+        pass
+
+    def sample(self, features):
+        activity = features['Activity']
+        resource = features['Resource']
+
+        trunc_normal_sample = lambda mean, std_dev : scipy.stats.truncnorm(-mean / std_dev, np.inf, scale=std_dev, loc=mean).rvs()
+        norm_30_min = lambda : trunc_normal_sample(0.5, 0.05)
+        norm_1_hour = lambda : trunc_normal_sample(1, 0.1)
+        norm_2_hours = lambda : trunc_normal_sample(2, 0.3)
+        norm_4_hours = lambda : trunc_normal_sample(4, 0.3)
+        norm_6_hours = lambda : trunc_normal_sample(6, 0.6)
+
+        if activity == 'Create Purchase Requisition':
+            if resource in ['Alberto Duport', 'Anna Kaufmann', 'Anne Olwada']:
+                return norm_30_min()
+            elif resource in ['Christian Francois', 'Clement Duchot', 'Elvira Lores']:
+                return norm_1_hour()
+            elif resource in ['Esmana Liubiata', 'Fjodor Kowalski', 'Immanuel Karagianni']:
+                return norm_4_hours()
+            elif resource in ['Kim Passa', 'Miu Hanwan', 'Nico Ojenbeer', 'Penn Osterwalder', 'Tesca Lobes']:
+                return norm_6_hours()
+        elif activity == 'Create Request for Quotation':
+            if resource in ['Alberto Duport', 'Anna Kaufmann', 'Anne Olwada']:
+                return norm_6_hours()
+            elif resource in ['Christian Francois', 'Clement Duchot', 'Elvira Lores']:
+                return norm_4_hours()
+            elif resource in ['Esmana Liubiata', 'Fjodor Kowalski', 'Francis Odell']:
+                return norm_1_hour()
+            elif resource in ['Heinz Gutschmidt', 'Immanuel Karagianni', 'Kim Passa', 'Maris Freeman', 'Miu Hanwan', 'Nico Ojenbeer', 'Penn Osterwalder', 'Tesca Lobes']:
+                return norm_30_min()
+        elif activity == 'Analyze Request for Quotation':
+            if resource in ['Francois de Perrier', 'Karel de Groot']:
+                return norm_30_min()
+            elif resource == 'Magdalena Predutta':
+                return norm_6_hours()
+        elif activity == 'Send Request for Quotation to Supplier':
+            if resource in ['Francois de Perrier', 'Karel de Groot']:
+                return norm_4_hours()
+            elif resource == 'Magdalena Predutta':
+                return norm_1_hour()
+        elif activity == 'Create Quotation comparison Map':
+            if resource in ['Francois de Perrier', 'Karel de Groot', 'Magdalena Predutta']:
+                return norm_30_min()
+        elif activity == 'Analyze Quotation Comparison Map':
+            if resource in ['Anna Kaufmann', 'Anne Olwada', 'Elvira Lores', 'Esmana Liubiata', 'Fjodor Kowalski', 'Immanuel Karagianni']:
+                return norm_2_hours()
+            elif resource in ['Alberto Duport', 'Christian Francois', 'Clement Duchot', 'Kim Passa', 'Miu Hanwan', 'Nico Ojenbeer', 'Penn Osterwalder', 'Tesca Lobes']:
+                return norm_30_min()
+        elif activity == 'Choose best option':
+            if resource in ['Alberto Duport', 'Anna Kaufmann', 'Kim Passa', 'Miu Hanwan', 'Nico Ojenbeer', 'Penn Osterwalder', 'Tesca Lobes']:
+                return norm_1_hour()
+            elif resource in ['Anne Olwada', 'Christian Francois', 'Clement Duchot', 'Elvira Lores', 'Esmana Liubiata', 'Fjodor Kowalski', 'Immanuel Karagianni']:
+                return norm_30_min()
+        elif activity == 'Settle Conditions With Supplier':
+            if resource in ['Francois de Perrier', 'Karel de Groot', 'Magdalena Predutta']:
+                return norm_2_hours()
+        elif activity == 'Create Purchase Order':
+            if resource in ['Karel de Groot', 'Magdalena Predutta']:
+                return norm_1_hour()
+            elif resource in ['Francois de Perrier']:
+                return norm_6_hours()
+        elif activity == 'Confirm Purchase Order':
+            if resource in ['Carmen Finacse', 'Esmeralda Clay', 'Karen Clarens', 'Kiu Kan', 'Sean Manney']:
+                return norm_30_min()
+        elif activity == 'Deliver Goods Services':
+            if resource in ['Carmen Finacse', 'Sean Manney']:
+                return norm_30_min()
+            elif resource in ['Esmeralda Clay', 'Karen Clarens', 'Kiu Kan']:
+                return norm_1_hour()
+        elif activity == 'Release Purchase Order':
+            if resource in ['Alberto Duport', 'Anna Kaufmann', 'Anne Olwada', 'Christian Francois', 'Clement Duchot', 'Elvira Lores', 'Esmana Liubiata', 'Fjodor Kowalski', 'Immanuel Karagianni', 'Kim Passa', 'Miu Hanwan', 'Nico Ojenbeer', 'Penn Osterwalder', 'Tesca Lobes']:
+                return norm_30_min()
+        elif activity == 'Approve Purchase Order for payment':
+            if resource in ['Francois de Perrier']:
+                return norm_4_hours()
+            elif resource in ['Karel de Groot', 'Magdalena Predutta']:
+                return norm_1_hour()
+        elif activity == 'Send Invoice':
+            if resource in ['Carmen Finacse', 'Esmeralda Clay']:
+                return norm_30_min()
+            elif resource in ['Karen Clarens', 'Kiu Kan', 'Sean Manney']:
+                return norm_1_hour()
+        elif activity == "Release Supplier's Invoice":
+            if resource in ['Karalda Nimwada', 'Pedro Alvares']:
+                return norm_30_min()
+        elif activity == "Authorize Supplier's Invoice payment":
+            if resource in ['Karalda Nimwada', 'Pedro Alvares']:
+                return norm_30_min()
+        elif activity == 'Pay Invoice':
+            if resource in ['Karalda Nimwada', 'Pedro Alvares']:
+                return norm_30_min()
+        elif activity == 'Amend Request for Quotation':
+            if resource in ['Alberto Duport', 'Anna Kaufmann', 'Anne Olwada']:
+                return norm_1_hour()
+            elif resource in ['Christian Francois', 'Clement Duchot', 'Elvira Lores']:
+                return norm_30_min()
+            elif resource in ['Esmana Liubiata', 'Fjodor Kowalski', 'Francis Odell', 'Heinz Gutschmidt', 'Immanuel Karagianni', 'Kim Passa', 'Maris Freeman', 'Miu Hanwan', 'Nico Ojenbeer', 'Penn Osterwalder', 'Tesca Lobes']:
+                return norm_4_hours()
+        elif activity == 'Settle Dispute With Supplier':
+            if resource in ['Francois de Perrier', 'Magdalena Predutta', 'Pedro Alvares']:
+                return norm_2_hours()
+            elif resource in ['Karalda Nimwada', 'Karel de Groot']:
+                return norm_30_min()
+        elif activity == 'Analyze Purchase Requisition':
+            if resource in ['Francis Odell']:
+                return norm_6_hours()
+            elif resource in ['Heinz Gutschmidt', 'Maris Freeman']:
+                return norm_30_min()
+        elif activity == 'Amend Purchase Requisition':
+            if resource in ['Immanuel Karagianni', 'Kim Passa', 'Miu Hanwan']:
+                return norm_30_min()
