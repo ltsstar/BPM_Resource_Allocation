@@ -253,6 +253,11 @@ class UnrelatedParallelMachinesSchedulingNonAssignPolicy2(Policy):
         # select first task (for every resource)
         for machine, tasks in machine_tasks.items():
             decoded_resource = swaped_resources_dict[machine]
+            #for task in tasks:
+            #    selected_task = task.task
+            #    decoded_task = swaped_tasks_dict[selected_task]
+            #    selected.append((decoded_task, decoded_resource))
+            #continue
             if self.selection_strategy == 'first':
                 selected_task = tasks[0].task
             elif self.selection_strategy == 'fastest':
@@ -267,6 +272,7 @@ class UnrelatedParallelMachinesSchedulingNonAssignPolicy2(Policy):
             selected.append((decoded_task, decoded_resource))
             self.num_allocated += 1
 
+        #res = selected
         res = self.prune_invalid_assignments(selected, available_resources, resource_pool, unassigned_tasks)
         return res
         #return selected

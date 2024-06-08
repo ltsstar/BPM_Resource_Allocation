@@ -45,7 +45,7 @@ def run_simulator(problem, days, objective, delta, result_queue, selection_strat
         policy = UnrelatedParallelMachinesSchedulingNonAssignPolicy2(1, 0, 0, delta, selection_strategy)
     elif objective == "KBatch":
         # use delta for batch size k
-        policy = UnrelatedParallelMachinesSchedulingBatchPolicy2(1, 0, 0, 0, selection_strategy, delta) 
+        policy = UnrelatedParallelMachinesSchedulingBatchPolicy2(1, 0, 0, 0, selection_strategy, delta)
     elif objective == "Park":
         policy = None
     elif objective == "RoundRobin":

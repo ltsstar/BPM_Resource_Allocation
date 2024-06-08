@@ -24,12 +24,13 @@ warm_up_time =  0
 simulation_time = 24*70
 
 def run_simulator(delta, instance_file):
-    policy = UnrelatedParallelMachinesSchedulingNonAssignPolicy2(1, 0, 0, delta, 'EIF')
+    #policy = UnrelatedParallelMachinesSchedulingNonAssignPolicy2(1, 0, 0, delta, 'EIF')
     #policy = HungarianMultiObjectivePolicy(1, 0, 0, delta)
     #policy = LeastLoadedQualifiedPersonPolicy()
-    #policy = RoundRobinPolicy()
+    policy = RoundRobinPolicy()
     #policy = UnrelatedParallelMachinesSchedulingBatchPolicy2(1, 0, 0, delta, 'fastest', 50)
     #policy = ShortestQueueAllocation()
+
     my_planner = Planner(prediction_model,
                         warm_up_policy, warm_up_time,
                         policy,
@@ -39,8 +40,9 @@ def run_simulator(delta, instance_file):
 
     simulator = Simulator(my_planner, instance_file)
     simulator.problem.interarrival_time._alpha /= 4.8 #reset
-    #policy = ParkPolicy(simulator.problem.next_task_distribution, my_planner.predictor, my_planner.task_type_occurrences)
-    #my_planner.policy = policy
+
+    policy = ParkPolicy(simulator.problem.next_task_distribution, my_planner.predictor, my_planner.task_type_occurrences)
+    my_planner.policy = policy
 
     simulator_result = simulator.run(simulation_time)
     if simulator_result[1] == "Stopped":
@@ -52,5 +54,5 @@ def run_simulator(delta, instance_file):
 
 
 
-res = run_simulator(1.4, 'data/po_problem.pickle')
+res = run_simulator(3, 'data/po_problem.pickle')
 print(res)
