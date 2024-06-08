@@ -76,7 +76,7 @@ class GammaDistribution:
         self._scale = 0
 
     def learn(self, values):
-        fit_alpha, fit_loc, fit_scale = scipy.stats.gamma.fit(values)
+        fit_alpha, fit_loc, fit_scale = scipy.stats.gamma.fit(values, method="MM", floc = 0)
         self._alpha = fit_alpha
         self._loc = fit_loc
         self._scale = fit_scale
@@ -177,7 +177,7 @@ class StratifiedNumericDistribution:
 
         self._normalizer = MinMaxScaler()
         self._standardizer = StandardScaler()
-        self._encoder = OneHotEncoder(sparse_output=False)
+        self._encoder = OneHotEncoder(sparse=False)
 
         self._target_column = target_column
         self._feature_columns = feature_columns
@@ -254,6 +254,7 @@ class StratifiedNumericDistribution:
             return processing_time + error
         else:
             return processing_time
+
 
 class POTaskDurationDistribution:
     def __init__(self):
