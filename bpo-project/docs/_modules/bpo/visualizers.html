@@ -1,0 +1,149 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bpo.visualizers &#8212; Business Process Optimization  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/readable.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head><body>
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Business Process Optimization  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bpo.visualizers</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bpo.visualizers</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">pandas</span>
+
+
+<div class="viewcode-block" id="boxplot"><a class="viewcode-back" href="../../bpo.visualizers.html#bpo.visualizers.boxplot">[docs]</a><span class="k">def</span> <span class="nf">boxplot</span><span class="p">(</span><span class="n">series</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a boxplot for each element in the data series.</span>
+<span class="sd">    The data series is a dictionary. Each key is used as the label of the boxplot.</span>
+<span class="sd">    Each value is a list of numerical data that is used to construct the boxplot.</span>
+
+<span class="sd">    :param series: a dictionary that maps a label to a list of numerical data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">boxplot</span><span class="p">(</span><span class="n">series</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">ticks</span><span class="o">=</span><span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">series</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)],</span> <span class="n">labels</span><span class="o">=</span><span class="n">series</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">45</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="line_with_ci"><a class="viewcode-back" href="../../bpo.visualizers.html#bpo.visualizers.line_with_ci">[docs]</a><span class="k">def</span> <span class="nf">line_with_ci</span><span class="p">(</span><span class="n">series</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a line graph for the data series.</span>
+<span class="sd">    The data series is a dictionary. Each key is a numerical value that represents an x-coordinate.</span>
+<span class="sd">    Each value is a pair of numerical values, where the first element is the y-coordinate and the</span>
+<span class="sd">    second element is an interval ci around the y-coordinate. A line graph is creates based on the</span>
+<span class="sd">    (x, y) values with a bar around the y-ci, y+ci values. Typically, the ci value represents the</span>
+<span class="sd">    confidence interval.</span>
+
+<span class="sd">    :param series: a dictionary that maps numerical x values to (y, ci) numerical pairs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">series</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="p">[</span><span class="n">mean</span> <span class="k">for</span> <span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span> <span class="ow">in</span> <span class="n">series</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+    <span class="n">ci_bottom</span> <span class="o">=</span> <span class="p">[</span><span class="n">mean</span><span class="o">-</span><span class="n">h</span> <span class="k">for</span> <span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span> <span class="ow">in</span> <span class="n">series</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+    <span class="n">ci_top</span> <span class="o">=</span> <span class="p">[</span><span class="n">mean</span><span class="o">+</span><span class="n">h</span> <span class="k">for</span> <span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span> <span class="ow">in</span> <span class="n">series</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ci_bottom</span><span class="p">,</span> <span class="n">ci_top</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="statistics"><a class="viewcode-back" href="../../bpo.visualizers.html#bpo.visualizers.statistics">[docs]</a><span class="k">def</span> <span class="nf">statistics</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">datetime_format</span><span class="o">=</span><span class="s2">&quot;%Y/%m/</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates statistics for the interarrival time and the processing times of the given log.</span>
+<span class="sd">    Returns the statistics as a dictionary with the labels of the statistics as keys and as values lists</span>
+<span class="sd">    with all the observed times. The log must contain the columns case_id, task, resource, start_time, completion_time.</span>
+
+<span class="sd">    :param log: a pandas dataframe containing the log.</span>
+<span class="sd">    :param datetime_format: optional parameter with the datetime formatting rule that will be used to interpret the start and completion timestamps</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;start_time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;start_time&#39;</span><span class="p">],</span> <span class="nb">format</span><span class="o">=</span><span class="n">datetime_format</span><span class="p">)</span>
+    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;completion_time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;completion_time&#39;</span><span class="p">],</span> <span class="nb">format</span><span class="o">=</span><span class="n">datetime_format</span><span class="p">)</span>
+    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;duration&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="s1">&#39;start_time&#39;</span><span class="p">,</span> <span class="s1">&#39;completion_time&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">tss</span><span class="p">:</span> <span class="p">(</span><span class="n">tss</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">tss</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">/</span> <span class="mi">3600</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">df_cases</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;case_id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">case_start</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;start_time&#39;</span><span class="p">,</span> <span class="s1">&#39;min&#39;</span><span class="p">),</span> <span class="n">case_complete</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;start_time&#39;</span><span class="p">,</span> <span class="s1">&#39;min&#39;</span><span class="p">),</span> <span class="n">trace</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;task&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">tss</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">tss</span><span class="p">)))</span>
+    <span class="n">df_cases</span> <span class="o">=</span> <span class="n">df_cases</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">&#39;case_start&#39;</span><span class="p">)</span>
+
+    <span class="n">task_types</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;task&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+
+    <span class="n">resources</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;resource&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+
+    <span class="n">interarrival_times</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">last_arrival_time</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">processing_times</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">tt</span> <span class="ow">in</span> <span class="n">task_types</span><span class="p">:</span>
+        <span class="n">processing_times</span><span class="p">[</span><span class="n">tt</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;task&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">tt</span><span class="p">][</span><span class="s1">&#39;duration&#39;</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df_cases</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">last_arrival_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">interarrival_times</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;case_start&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">last_arrival_time</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">/</span> <span class="mi">3600</span><span class="p">)</span>
+        <span class="n">last_arrival_time</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;case_start&#39;</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;Interarrrival times&#39;</span><span class="p">:</span> <span class="n">interarrival_times</span><span class="p">,</span> <span class="o">**</span><span class="n">processing_times</span><span class="p">}</span></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation index</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright .
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.
+  </div>
+  
+  </body>
+</html>

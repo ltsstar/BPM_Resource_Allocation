@@ -1,0 +1,143 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>bpo.miners module &#8212; Business Process Optimization  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/readable.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="bpo.visualizers module" href="bpo.visualizers.html" />
+   
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head><body>
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="bpo.visualizers.html" title="bpo.visualizers module"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Business Process Optimization  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="api.html" accesskey="U">API Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bpo.miners module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bpo.miners">
+<span id="bpo-miners-module"></span><h1>bpo.miners module<a class="headerlink" href="#module-bpo.miners" title="Permalink to this headline">¶</a></h1>
+<p><strong>Functions:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bpo.miners.mine_problem" title="bpo.miners.mine_problem"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mine_problem</span></code></a>(log[, task_type_filter, ...])</p></td>
+<td><p>Mines a problem and returns it as a <a class="reference internal" href="bpo.problems.html#bpo.problems.Problem" title="bpo.problems.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">problems.Problem</span></code></a> that can be simulated.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py function">
+<dt class="sig sig-object py" id="bpo.miners.mine_problem">
+<span class="sig-prename descclassname"><span class="pre">bpo.miners.</span></span><span class="sig-name descname"><span class="pre">mine_problem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_type_filter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datetime_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'%Y/%m/%d</span> <span class="pre">%H:%M:%S'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">earliest_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latest_completion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_resource_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resource_schedule_timeunit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">datetime.timedelta(seconds=3600)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resource_schedule_repeat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">168</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datafields</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_error_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bpo/miners.html#mine_problem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.miners.mine_problem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mines a problem and returns it as a <a class="reference internal" href="bpo.problems.html#bpo.problems.Problem" title="bpo.problems.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">problems.Problem</span></code></a> that can be simulated.
+The log from which the model is mined must at least have the columns
+Case ID, Activity, Resource, Start Timestamp, Complete Timestamp,
+which identify the corresponding event log information. Activity labels
+are the same as Task Types for the purposes of the problem definition.
+The timing distributions associated with the problem are all in hours.
+Only cases that start on or after earliest_start and complete on or after latest_completion will be taken into account.
+Datafields specifies the columns in the log for which data fields will be learned. Datafields is a dictionary that maps column names to probability distributions.
+For the corresponding log column, a data type will be learned according to the specified distribution. The simulator can then draw samples for the distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>log</strong> – a pandas dataframe from which the problem must be mined.</p></li>
+<li><p><strong>task_type_filter</strong> – a function that takes the name of a task type/ activity
+and returns if it should be included, or None to include all task types.</p></li>
+<li><p><strong>datetime_format</strong> – the datetime format the Start Timestamp and Complete Timestamp columns use.</p></li>
+<li><p><strong>earliest_start</strong> – a datetime object that, if not None, indicates that only cases that start on or after this datetime should be included. <a href="#id1"><span class="problematic" id="id2">:param:`earliest_start`</span></a> and <a href="#id3"><span class="problematic" id="id4">:param:`latest_completion`</span></a> should either both be None or both have a value.</p></li>
+<li><p><strong>latest_completion</strong> – a datetime object that, if not None, indicates that only cases that complete on or before this datetime should be included. <a href="#id5"><span class="problematic" id="id6">:param:`earliest_start`</span></a> and <a href="#id7"><span class="problematic" id="id8">:param:`latest_completion`</span></a> should either both be None or both have a value.</p></li>
+<li><p><strong>min_resource_count</strong> – the minimum number of times a resource must have executed a task
+of a particular type, for it to be considered in the pool of resources for
+the task type. This must be greater than 1, otherwise the standard deviation
+of the processing time cannot be computed.</p></li>
+<li><p><strong>resource_schedule_timeunit</strong> – the timeunit in which resource schedules should be represented. Default is 1 hour.</p></li>
+<li><p><strong>resource_schedule_repeat</strong> – the number of times after which the resource schedule is expected to repeat itself. Default is 168 repeats (of 1 hour is a week).</p></li>
+<li><p><strong>datafields</strong> – a mapping of string to DistributionType, where string must be the name is one of the columns of the log.</p></li>
+<li><p><strong>max_error_std</strong> – a distribution that describes the maximum standard deviation of the error that the processing times can have. It must be specified as a fraction of the mean processing time. The actual fraction will be sampled from this probability distribution. By default, no maximum is set.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a <a class="reference internal" href="bpo.problems.html#bpo.problems.Problem" title="bpo.problems.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">problems.Problem</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation index</a><ul>
+  <li><a href="api.html">API Documentation</a><ul>
+      <li>Previous: <a href="bpo.visualizers.html" title="previous chapter">bpo.visualizers module</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bpo.miners.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright .
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.
+  </div>
+  
+  </body>
+</html>

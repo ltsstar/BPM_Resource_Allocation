@@ -1,0 +1,223 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bpo.planners &#8212; Business Process Optimization  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/readable.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head><body>
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Business Process Optimization  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bpo.planners</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bpo.planners</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+
+
+<div class="viewcode-block" id="Planner"><a class="viewcode-back" href="../../bpo.planners.html#bpo.planners.Planner">[docs]</a><span class="k">class</span> <span class="nc">Planner</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Abstract class that all planners must implement.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Planner.assign"><a class="viewcode-back" href="../../bpo.planners.html#bpo.planners.Planner.assign">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">environment</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Assign tasks to resources from the simulation environment.</span>
+
+<span class="sd">        :param environment: a :class:`.Simulator`</span>
+<span class="sd">        :return: [(task, resource, moment)], where</span>
+<span class="sd">            task is an instance of :class:`.Task`,</span>
+<span class="sd">            resource is one of :attr:`.Problem.resources`, and</span>
+<span class="sd">            moment is a number representing the moment in simulation time</span>
+<span class="sd">            at which the resource must be assigned to the task (typically, this can also be :attr:`.Simulator.now`).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div></div>
+
+
+<span class="c1"># Greedy assignment</span>
+<div class="viewcode-block" id="GreedyPlanner"><a class="viewcode-back" href="../../bpo.planners.html#bpo.planners.GreedyPlanner">[docs]</a><span class="k">class</span> <span class="nc">GreedyPlanner</span><span class="p">(</span><span class="n">Planner</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A :class:`.Planner` that assigns tasks to resources in an anything-goes manner.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="GreedyPlanner.assign"><a class="viewcode-back" href="../../bpo.planners.html#bpo.planners.GreedyPlanner.assign">[docs]</a>    <span class="k">def</span> <span class="nf">assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">environment</span><span class="p">):</span>
+        <span class="n">assignments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">available_resources</span> <span class="o">=</span> <span class="n">environment</span><span class="o">.</span><span class="n">available_resources</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="c1"># assign the first unassigned task to the first available resource, the second task to the second resource, etc.</span>
+        <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">environment</span><span class="o">.</span><span class="n">unassigned_tasks</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">resource</span> <span class="ow">in</span> <span class="n">available_resources</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">resource</span> <span class="ow">in</span> <span class="n">environment</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">resource_pool</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">task_type</span><span class="p">):</span>
+                    <span class="n">available_resources</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">resource</span><span class="p">)</span>
+                    <span class="n">assignments</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">task</span><span class="p">,</span> <span class="n">resource</span><span class="p">,</span> <span class="n">environment</span><span class="o">.</span><span class="n">now</span><span class="p">))</span>
+                    <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">break</span>  <span class="c1"># for efficiency purposes</span>
+        <span class="k">return</span> <span class="n">assignments</span></div></div>
+
+
+<div class="viewcode-block" id="HeuristicPlanner"><a class="viewcode-back" href="../../bpo.planners.html#bpo.planners.HeuristicPlanner">[docs]</a><span class="k">class</span> <span class="nc">HeuristicPlanner</span><span class="p">(</span><span class="n">Planner</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A :class:`.Planner` that takes each task and tries to assign it to the optimal resource.</span>
+<span class="sd">        The optimal resource must be one of :attr:`.Problem.resources` and specified as</span>
+<span class="sd">        value of the &#39;optimal_resource&#39; of :attr:`.Task.data`. If no such resource is</span>
+<span class="sd">        available, it will assign an arbitrary resource.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="HeuristicPlanner.assign"><a class="viewcode-back" href="../../bpo.planners.html#bpo.planners.HeuristicPlanner.assign">[docs]</a>    <span class="k">def</span> <span class="nf">assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">environment</span><span class="p">):</span>
+        <span class="n">assignments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">available_resources</span> <span class="o">=</span> <span class="n">environment</span><span class="o">.</span><span class="n">available_resources</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">unassigned_tasks_to_process</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">unassigned_tasks</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">environment</span><span class="o">.</span><span class="n">unassigned_tasks</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">available_resources</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">break</span>  <span class="c1"># for efficiency</span>
+            <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;optimal_resource&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">available_resources</span><span class="p">:</span>
+                <span class="c1"># if a perfect match is possible, make it</span>
+                <span class="n">resource</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;optimal_resource&quot;</span><span class="p">]</span>
+                <span class="n">available_resources</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">resource</span><span class="p">)</span>
+                <span class="n">assignments</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">task</span><span class="p">,</span> <span class="n">resource</span><span class="p">,</span> <span class="n">environment</span><span class="o">.</span><span class="n">now</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">unassigned_tasks_to_process</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">available_resources</span><span class="p">):</span>
+                <span class="c1"># if no perfect match is possible anymore, make a match anyway</span>
+                <span class="n">resource</span> <span class="o">=</span> <span class="n">available_resources</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="n">assignments</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">task</span><span class="p">,</span> <span class="n">resource</span><span class="p">,</span> <span class="n">environment</span><span class="o">.</span><span class="n">now</span><span class="p">))</span>
+            <span class="n">unassigned_tasks_to_process</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">assignments</span></div></div>
+
+
+<div class="viewcode-block" id="PredictiveHeuristicPlanner"><a class="viewcode-back" href="../../bpo.planners.html#bpo.planners.PredictiveHeuristicPlanner">[docs]</a><span class="k">class</span> <span class="nc">PredictiveHeuristicPlanner</span><span class="p">(</span><span class="n">Planner</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; A :class:`.Planner` that tries to assign a task to the optimal resource.</span>
+<span class="sd">        This is the resource that is predicted to have the lowest processing time</span>
+<span class="sd">        on the task. It takes the list of unassigned tasks and the list of available resources</span>
+<span class="sd">        and creates the assignment with the lowest processing time (in a greedy manner).</span>
+<span class="sd">        To avoid starvation of tasks, it only looks in the first nr_lookahead tasks and with</span>
+<span class="sd">        probability epsilon simply assigns the first task. If nr_lookahead is 0, it looks at all tasks.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predicter</span><span class="p">,</span> <span class="n">nr_lookahead</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predicter</span> <span class="o">=</span> <span class="n">predicter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nr_lookahead</span> <span class="o">=</span> <span class="n">nr_lookahead</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">=</span> <span class="n">epsilon</span>
+
+<div class="viewcode-block" id="PredictiveHeuristicPlanner.assign"><a class="viewcode-back" href="../../bpo.planners.html#bpo.planners.PredictiveHeuristicPlanner.assign">[docs]</a>    <span class="k">def</span> <span class="nf">assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">environment</span><span class="p">):</span>
+        <span class="n">nr_lookahead</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nr_lookahead</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="p">:</span>
+            <span class="n">nr_lookahead</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">nr_lookahead</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">nr_lookahead</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">unassigned_tasks</span><span class="p">)</span>
+
+        <span class="n">possible_assignments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">unassigned_tasks</span><span class="o">.</span><span class="n">values</span><span class="p">())[:</span><span class="n">nr_lookahead</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">resource</span> <span class="ow">in</span> <span class="n">environment</span><span class="o">.</span><span class="n">available_resources</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">resource</span> <span class="ow">in</span> <span class="n">environment</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">resource_pool</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">task_type</span><span class="p">):</span>
+                    <span class="n">possible_assignments</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">predicter</span><span class="o">.</span><span class="n">predict_processing_time_task</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="n">resource</span><span class="p">,</span> <span class="n">task</span><span class="p">),</span> <span class="n">resource</span><span class="p">,</span> <span class="n">task</span><span class="p">))</span>
+        <span class="n">possible_assignments</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">pa</span><span class="p">:</span> <span class="p">(</span><span class="n">pa</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pa</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+        <span class="n">assignments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">possible_assignments</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">processing_time</span><span class="p">,</span> <span class="n">resource</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span> <span class="o">=</span> <span class="n">possible_assignments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">assignments</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">task</span><span class="p">,</span> <span class="n">resource</span><span class="p">,</span> <span class="n">environment</span><span class="o">.</span><span class="n">now</span><span class="p">))</span>
+            <span class="n">possible_assignments</span> <span class="o">=</span> <span class="p">[(</span><span class="n">p</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span> <span class="ow">in</span> <span class="n">possible_assignments</span> <span class="k">if</span> <span class="n">r</span> <span class="o">!=</span> <span class="n">resource</span> <span class="ow">and</span> <span class="n">t</span> <span class="o">!=</span> <span class="n">task</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">assignments</span></div></div>
+
+
+<span class="c1"># Variant of the heuristic planner:</span>
+<span class="c1"># For each task plans the best available resource, or another resource if the best one is not available</span>
+<span class="c1"># Defers planning if it is likely that a better resource will be available some time in the future</span>
+<div class="viewcode-block" id="ImbalancedPredictivePlanner"><a class="viewcode-back" href="../../bpo.planners.html#bpo.planners.ImbalancedPredictivePlanner">[docs]</a><span class="k">class</span> <span class="nc">ImbalancedPredictivePlanner</span><span class="p">(</span><span class="n">Planner</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Specific planner for the :class:`.problem.ImbalancedProblem`, to be used for test purposes.</span>
+<span class="sd">        A :class:`.Planner` that tries to assign a task to the optimal resource,</span>
+<span class="sd">        same as the :class:`.HeuristicPlanner`, but failing that will predict</span>
+<span class="sd">        if it is better to wait with the assignment or assign to a suboptimal resource.</span>
+<span class="sd">        Specifically, if the optimal resource is not available,</span>
+<span class="sd">        it will make a prediction, using the passed predicter, to check if the optimal</span>
+<span class="sd">        resource will be ready in time before it becomes better to assign another resource.</span>
+<span class="sd">        If so, it will not assign the task.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predicter</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predicter</span> <span class="o">=</span> <span class="n">predicter</span>
+
+<div class="viewcode-block" id="ImbalancedPredictivePlanner.assign"><a class="viewcode-back" href="../../bpo.planners.html#bpo.planners.ImbalancedPredictivePlanner.assign">[docs]</a>    <span class="k">def</span> <span class="nf">assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">environment</span><span class="p">):</span>
+        <span class="n">assignments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">available_resources</span> <span class="o">=</span> <span class="n">environment</span><span class="o">.</span><span class="n">available_resources</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">unassigned_tasks_to_process</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">unassigned_tasks</span><span class="p">)</span>
+        <span class="n">now</span> <span class="o">=</span> <span class="n">environment</span><span class="o">.</span><span class="n">now</span>
+        <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">environment</span><span class="o">.</span><span class="n">unassigned_tasks</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">available_resources</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">break</span>  <span class="c1"># for efficiency</span>
+            <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;optimal_resource&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">available_resources</span><span class="p">:</span>
+                <span class="c1"># if a perfect match is possible, make it</span>
+                <span class="n">resource</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;optimal_resource&quot;</span><span class="p">]</span>
+                <span class="n">available_resources</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">resource</span><span class="p">)</span>
+                <span class="n">assignments</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">task</span><span class="p">,</span> <span class="n">resource</span><span class="p">,</span> <span class="n">environment</span><span class="o">.</span><span class="n">now</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;optimal_resource&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;R1&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="s2">&quot;R1&quot;</span> <span class="ow">in</span> <span class="n">environment</span><span class="o">.</span><span class="n">busy_resources</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="ow">and</span> <span class="p">(</span><span class="s2">&quot;R2&quot;</span> <span class="ow">in</span> <span class="n">environment</span><span class="o">.</span><span class="n">available_resources</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">predicter</span><span class="o">.</span><span class="n">predict_remaining_processing_time</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="s2">&quot;R1&quot;</span><span class="p">,</span> <span class="n">environment</span><span class="o">.</span><span class="n">busy_resources</span><span class="p">[</span><span class="s2">&quot;R1&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">environment</span><span class="o">.</span><span class="n">busy_resources</span><span class="p">[</span><span class="s2">&quot;R1&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">now</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">predicter</span><span class="o">.</span><span class="n">predict_processing_time_task</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="s2">&quot;R1&quot;</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">predicter</span><span class="o">.</span><span class="n">predict_processing_time_task</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="s2">&quot;R2&quot;</span><span class="p">,</span> <span class="n">task</span><span class="p">)):</span>
+                <span class="k">pass</span>
+                <span class="c1"># if R1 is the optimal resource and R1 is busy, but R2 is available:</span>
+                <span class="c1">#   if the predicted remaining processing time of R1 + predicted processing time for R1 &lt; predicted processing time for R2:</span>
+                <span class="c1">#     do nothing and wait for R1 to become available</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;optimal_resource&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;R2&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="s2">&quot;R2&quot;</span> <span class="ow">in</span> <span class="n">environment</span><span class="o">.</span><span class="n">busy_resources</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="ow">and</span> <span class="p">(</span><span class="s2">&quot;R1&quot;</span> <span class="ow">in</span> <span class="n">environment</span><span class="o">.</span><span class="n">available_resources</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">predicter</span><span class="o">.</span><span class="n">predict_remaining_processing_time</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="s2">&quot;R2&quot;</span><span class="p">,</span> <span class="n">environment</span><span class="o">.</span><span class="n">busy_resources</span><span class="p">[</span><span class="s2">&quot;R2&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">environment</span><span class="o">.</span><span class="n">busy_resources</span><span class="p">[</span><span class="s2">&quot;R2&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">now</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">predicter</span><span class="o">.</span><span class="n">predict_processing_time_task</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="s2">&quot;R2&quot;</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">predicter</span><span class="o">.</span><span class="n">predict_processing_time_task</span><span class="p">(</span><span class="n">environment</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="s2">&quot;R1&quot;</span><span class="p">,</span> <span class="n">task</span><span class="p">)):</span>
+                <span class="c1"># same for R2</span>
+                <span class="k">pass</span>
+            <span class="k">elif</span> <span class="n">unassigned_tasks_to_process</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">available_resources</span><span class="p">):</span>
+                <span class="c1"># if no perfect match is possible anymore, make a match anyway</span>
+                <span class="n">resource</span> <span class="o">=</span> <span class="n">available_resources</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="n">assignments</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">task</span><span class="p">,</span> <span class="n">resource</span><span class="p">,</span> <span class="n">environment</span><span class="o">.</span><span class="n">now</span><span class="p">))</span>
+            <span class="n">unassigned_tasks_to_process</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">assignments</span></div></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation index</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright .
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.
+  </div>
+  
+  </body>
+</html>

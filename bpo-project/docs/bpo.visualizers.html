@@ -1,0 +1,162 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>bpo.visualizers module &#8212; Business Process Optimization  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/readable.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="bpo.miners module" href="bpo.miners.html" />
+    <link rel="prev" title="bpo.simulator module" href="bpo.simulator.html" />
+   
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head><body>
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="bpo.miners.html" title="bpo.miners module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="bpo.simulator.html" title="bpo.simulator module"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Business Process Optimization  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="api.html" accesskey="U">API Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bpo.visualizers module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bpo.visualizers">
+<span id="bpo-visualizers-module"></span><h1>bpo.visualizers module<a class="headerlink" href="#module-bpo.visualizers" title="Permalink to this headline">¶</a></h1>
+<p><strong>Functions:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bpo.visualizers.boxplot" title="bpo.visualizers.boxplot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">boxplot</span></code></a>(series)</p></td>
+<td><p>Creates a boxplot for each element in the data series.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bpo.visualizers.line_with_ci" title="bpo.visualizers.line_with_ci"><code class="xref py py-obj docutils literal notranslate"><span class="pre">line_with_ci</span></code></a>(series)</p></td>
+<td><p>Creates a line graph for the data series.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bpo.visualizers.statistics" title="bpo.visualizers.statistics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">statistics</span></code></a>(log[, datetime_format])</p></td>
+<td><p>Creates statistics for the interarrival time and the processing times of the given log.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py function">
+<dt class="sig sig-object py" id="bpo.visualizers.boxplot">
+<span class="sig-prename descclassname"><span class="pre">bpo.visualizers.</span></span><span class="sig-name descname"><span class="pre">boxplot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bpo/visualizers.html#boxplot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.visualizers.boxplot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a boxplot for each element in the data series.
+The data series is a dictionary. Each key is used as the label of the boxplot.
+Each value is a list of numerical data that is used to construct the boxplot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>series</strong> – a dictionary that maps a label to a list of numerical data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bpo.visualizers.line_with_ci">
+<span class="sig-prename descclassname"><span class="pre">bpo.visualizers.</span></span><span class="sig-name descname"><span class="pre">line_with_ci</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bpo/visualizers.html#line_with_ci"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.visualizers.line_with_ci" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a line graph for the data series.
+The data series is a dictionary. Each key is a numerical value that represents an x-coordinate.
+Each value is a pair of numerical values, where the first element is the y-coordinate and the
+second element is an interval ci around the y-coordinate. A line graph is creates based on the
+(x, y) values with a bar around the y-ci, y+ci values. Typically, the ci value represents the
+confidence interval.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>series</strong> – a dictionary that maps numerical x values to (y, ci) numerical pairs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bpo.visualizers.statistics">
+<span class="sig-prename descclassname"><span class="pre">bpo.visualizers.</span></span><span class="sig-name descname"><span class="pre">statistics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datetime_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'%Y/%m/%d</span> <span class="pre">%H:%M:%S'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bpo/visualizers.html#statistics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.visualizers.statistics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates statistics for the interarrival time and the processing times of the given log.
+Returns the statistics as a dictionary with the labels of the statistics as keys and as values lists
+with all the observed times. The log must contain the columns case_id, task, resource, start_time, completion_time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>log</strong> – a pandas dataframe containing the log.</p></li>
+<li><p><strong>datetime_format</strong> – optional parameter with the datetime formatting rule that will be used to interpret the start and completion timestamps</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation index</a><ul>
+  <li><a href="api.html">API Documentation</a><ul>
+      <li>Previous: <a href="bpo.simulator.html" title="previous chapter">bpo.simulator module</a></li>
+      <li>Next: <a href="bpo.miners.html" title="next chapter">bpo.miners module</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bpo.visualizers.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright .
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.
+  </div>
+  
+  </body>
+</html>

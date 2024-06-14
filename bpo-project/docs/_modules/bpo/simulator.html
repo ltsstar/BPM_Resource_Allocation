@@ -1,0 +1,681 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bpo.simulator &#8212; Business Process Optimization  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/readable.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head><body>
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Business Process Optimization  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bpo.simulator</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bpo.simulator</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span><span class="p">,</span> <span class="n">auto</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span> <span class="nn">statistics</span> <span class="kn">import</span> <span class="n">mean</span>
+<span class="kn">import</span> <span class="nn">scipy.stats</span> <span class="k">as</span> <span class="nn">st</span>
+<span class="kn">import</span> <span class="nn">random</span>
+
+
+<div class="viewcode-block" id="EventType"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.EventType">[docs]</a><span class="k">class</span> <span class="nc">EventType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An enumeration for the types of event that can happen in the simulator.&quot;&quot;&quot;</span>
+    <span class="n">CASE_ARRIVAL</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="sd">&quot;&quot;&quot;A case arrives.</span>
+<span class="sd">    </span>
+<span class="sd">    :meta hide-value:&quot;&quot;&quot;</span>
+    <span class="n">START_TASK</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="sd">&quot;&quot;&quot;A task starts.</span>
+<span class="sd">    </span>
+<span class="sd">    :meta hide-value:&quot;&quot;&quot;</span>
+    <span class="n">COMPLETE_TASK</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="sd">&quot;&quot;&quot;A task completes.</span>
+<span class="sd">    </span>
+<span class="sd">    :meta hide-value:&quot;&quot;&quot;</span>
+    <span class="n">PLAN_TASKS</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="sd">&quot;&quot;&quot;An action is performed to assign tasks to resources.</span>
+<span class="sd">    </span>
+<span class="sd">    :meta hide-value:&quot;&quot;&quot;</span>
+    <span class="n">TASK_ACTIVATE</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="sd">&quot;&quot;&quot;A task becomes ready to perform (but is not assigned to a resource).</span>
+<span class="sd">    </span>
+<span class="sd">    :meta hide-value:&quot;&quot;&quot;</span>
+    <span class="n">TASK_PLANNED</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="sd">&quot;&quot;&quot;A task is assigned to a resource.</span>
+<span class="sd">    </span>
+<span class="sd">    :meta hide-value:&quot;&quot;&quot;</span>
+    <span class="n">COMPLETE_CASE</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="sd">&quot;&quot;&quot;A case completes.</span>
+<span class="sd">    </span>
+<span class="sd">    :meta hide-value:&quot;&quot;&quot;</span>
+    <span class="n">SCHEDULE_RESOURCES</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="sd">&quot;&quot;&quot;Resources are scheduled every full clock tick.</span>
+
+<span class="sd">    :meta hide-value:&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="TimeUnit"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.TimeUnit">[docs]</a><span class="k">class</span> <span class="nc">TimeUnit</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An enumeration for the unit in which simulation time is measured.&quot;&quot;&quot;</span>
+    <span class="n">SECONDS</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Measured in seconds.</span>
+<span class="sd">    </span>
+<span class="sd">    :meta hide-value:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">MINUTES</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Measured in minutes.</span>
+
+<span class="sd">    :meta hide-value:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">HOURS</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Measured in hours.</span>
+
+<span class="sd">    :meta hide-value:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">DAYS</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Measured in days.</span>
+
+<span class="sd">    :meta hide-value:</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="Event"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.Event">[docs]</a><span class="k">class</span> <span class="nc">Event</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A simulation event.</span>
+
+<span class="sd">    :param event_type: the :class:`.EventType`.</span>
+<span class="sd">    :param moment: the moment in simulation time at which the event happens.</span>
+<span class="sd">    :param task: the task that triggered, or None for event_type == PLAN_TASKS.</span>
+<span class="sd">    :param resource: the resource that performs the task, or None for event_type not in [START_TASK, COMPLETE_TASK]</span>
+<span class="sd">    :param nr_tasks: the number of tasks that must be planned, or 0 for event_type != PLAN_TASKS</span>
+<span class="sd">    :param nr_resources: the number of resources that is available, or 0 for event_type != PLAN_TASKS</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_type</span><span class="p">,</span> <span class="n">moment</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">resource</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nr_tasks</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">nr_resources</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_type</span> <span class="o">=</span> <span class="n">event_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">moment</span> <span class="o">=</span> <span class="n">moment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="n">task</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resource</span> <span class="o">=</span> <span class="n">resource</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nr_tasks</span> <span class="o">=</span> <span class="n">nr_tasks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nr_resources</span> <span class="o">=</span> <span class="n">nr_resources</span>
+
+    <span class="k">def</span> <span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">moment</span> <span class="o">&lt;</span> <span class="n">other</span><span class="o">.</span><span class="n">moment</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_type</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">(&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moment</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot;)</span><span class="se">\t</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;,&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resource</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ReporterElement"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.ReporterElement">[docs]</a><span class="k">class</span> <span class="nc">ReporterElement</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract class that must be implemented by each concrete reporter element.</span>
+<span class="sd">    A reporter element is part of a :class:`.Reporter`. It receives a :meth:`.ReporterElement.report` call,</span>
+<span class="sd">    each time a simulation event occurs. It can then store information about that event. Once a simulation run</span>
+<span class="sd">    is completed, it receives a :meth:`.ReporterElement.summarize` call. It must then report aggregate</span>
+<span class="sd">    information that it stored about the events. Each time a simulation run starts, it receives</span>
+<span class="sd">    a :meth:`.ReporterElement.restart` call, upon which it must erase all previously stored information.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="ReporterElement.restart"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.ReporterElement.restart">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">restart</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Is invoked when a simulation run starts. Must erase all information to start a new report.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="ReporterElement.report"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.ReporterElement.report">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Is invoked when a simulation event occurs. Can store information about the event.</span>
+
+<span class="sd">        :param event: the simulation :class:`.Event` that occurred.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="ReporterElement.summarize"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.ReporterElement.summarize">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">summarize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Is invoked when a simulation run ends. Must return aggregate information about stored event information.</span>
+
+<span class="sd">        :return: a list of tuples (label, value), where label is a meaningful name for the reported aggregate information,</span>
+<span class="sd">                 and value is the corresponding information.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div></div>
+
+
+<div class="viewcode-block" id="TasksReporterElement"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.TasksReporterElement">[docs]</a><span class="k">class</span> <span class="nc">TasksReporterElement</span><span class="p">(</span><span class="n">ReporterElement</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A :class:`.ReporterElement` that keeps information about tasks, specifically:</span>
+
+<span class="sd">    * tasks completed: the number of tasks that completed during the simulation run.</span>
+<span class="sd">    * task proc time: the average of the processing times of the completed tasks.</span>
+<span class="sd">    * task wait time: the average of the waiting times of the completed tasks.</span>
+
+<span class="sd">    This information is returned by the :meth:`.TasksReporterElement.summarize` method</span>
+<span class="sd">    by the specified labels.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nr_tasks_completed</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>  <span class="c1"># task_type X nr tasks completed of that type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nr_tasks_started</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>  <span class="c1"># task_type X nr tasks started of that type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processing_time</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>  <span class="c1"># task_type X total processing time of tasks of that type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">waiting_time</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>  <span class="c1"># task_type X total waiting time of tasks of that type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_start_times</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>  <span class="c1"># task id X start time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_activation_times</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>  <span class="c1"># task id X activation time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_types</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="TasksReporterElement.restart"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.TasksReporterElement.restart">[docs]</a>    <span class="k">def</span> <span class="nf">restart</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TasksReporterElement.report"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.TasksReporterElement.report">[docs]</a>    <span class="k">def</span> <span class="nf">report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">event_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="n">EventType</span><span class="o">.</span><span class="n">TASK_ACTIVATE</span><span class="p">,</span> <span class="n">EventType</span><span class="o">.</span><span class="n">START_TASK</span><span class="p">,</span> <span class="n">EventType</span><span class="o">.</span><span class="n">COMPLETE_TASK</span><span class="p">}:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">task_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_types</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_types</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">task_type</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nr_tasks_completed</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">task_type</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nr_tasks_started</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">task_type</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">processing_time</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">task_type</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">waiting_time</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">task_type</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">event_type</span> <span class="o">==</span> <span class="n">EventType</span><span class="o">.</span><span class="n">TASK_ACTIVATE</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_activation_times</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">moment</span>
+        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">event_type</span> <span class="o">==</span> <span class="n">EventType</span><span class="o">.</span><span class="n">START_TASK</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_start_times</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">moment</span>
+            <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_activation_times</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">nr_tasks_started</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">task_type</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">waiting_time</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">task_type</span><span class="p">]</span> <span class="o">+=</span> <span class="n">event</span><span class="o">.</span><span class="n">moment</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_activation_times</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_activation_times</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">event_type</span> <span class="o">==</span> <span class="n">EventType</span><span class="o">.</span><span class="n">COMPLETE_TASK</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_start_times</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">nr_tasks_completed</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">task_type</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">processing_time</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">task_type</span><span class="p">]</span> <span class="o">+=</span> <span class="n">event</span><span class="o">.</span><span class="n">moment</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_start_times</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_start_times</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">id</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="TasksReporterElement.summarize"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.TasksReporterElement.summarize">[docs]</a>    <span class="k">def</span> <span class="nf">summarize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">task_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_types</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;task &quot;</span> <span class="o">+</span> <span class="n">task_type</span> <span class="o">+</span> <span class="s2">&quot; completed&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nr_tasks_completed</span><span class="p">[</span><span class="n">task_type</span><span class="p">]))</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;task &quot;</span> <span class="o">+</span> <span class="n">task_type</span> <span class="o">+</span> <span class="s2">&quot; proc time&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">processing_time</span><span class="p">[</span><span class="n">task_type</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">nr_tasks_completed</span><span class="p">[</span><span class="n">task_type</span><span class="p">]))</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;task &quot;</span> <span class="o">+</span> <span class="n">task_type</span> <span class="o">+</span> <span class="s2">&quot; wait time&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">waiting_time</span><span class="p">[</span><span class="n">task_type</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">nr_tasks_started</span><span class="p">[</span><span class="n">task_type</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">result</span></div></div>
+
+
+<div class="viewcode-block" id="CaseReporterElement"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.CaseReporterElement">[docs]</a><span class="k">class</span> <span class="nc">CaseReporterElement</span><span class="p">(</span><span class="n">ReporterElement</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A :class:`.ReporterElement` that keeps information about cases, specifically:</span>
+
+<span class="sd">    * cases completed: the number of cases that completed during the simulation run.</span>
+<span class="sd">    * cases cycle time: the average of the cycle times of the completed cases.</span>
+
+<span class="sd">    This information is returned by the :meth:`.CaseReporterElement.summarize` method</span>
+<span class="sd">    by the specified labels.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nr_cases_completed</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cycle_time</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">case_start_times</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+<div class="viewcode-block" id="CaseReporterElement.restart"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.CaseReporterElement.restart">[docs]</a>    <span class="k">def</span> <span class="nf">restart</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="CaseReporterElement.report"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.CaseReporterElement.report">[docs]</a>    <span class="k">def</span> <span class="nf">report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">event_type</span> <span class="o">==</span> <span class="n">EventType</span><span class="o">.</span><span class="n">CASE_ARRIVAL</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">case_start_times</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">case_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">moment</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">event_type</span> <span class="o">==</span> <span class="n">EventType</span><span class="o">.</span><span class="n">COMPLETE_CASE</span> <span class="ow">and</span> <span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">case_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">case_start_times</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nr_cases_completed</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cycle_time</span> <span class="o">+=</span> <span class="n">event</span><span class="o">.</span><span class="n">moment</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">case_start_times</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">case_id</span><span class="p">]</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">case_start_times</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">case_id</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="CaseReporterElement.summarize"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.CaseReporterElement.summarize">[docs]</a>    <span class="k">def</span> <span class="nf">summarize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[(</span><span class="s2">&quot;cases completed&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nr_cases_completed</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;case cycle time&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycle_time</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">nr_cases_completed</span><span class="p">)]</span></div></div>
+
+
+<div class="viewcode-block" id="EventLogReporterElement"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.EventLogReporterElement">[docs]</a><span class="k">class</span> <span class="nc">EventLogReporterElement</span><span class="p">(</span><span class="n">ReporterElement</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A :class:`.ReporterElement` that stored the simulation events that occur in an event log.</span>
+<span class="sd">    The :meth:`.EventLogReporterElement.summarize` method does not return any information.</span>
+<span class="sd">    As simulation time is a numerical value, some processing is done to convert simulation time</span>
+<span class="sd">    into a time format that can be read and interpreted by a process mining tool. To that end,</span>
+<span class="sd">    the timeunit in which simulation time is measured must be passed as well as the</span>
+<span class="sd">    initial_time moment in calendar time from which the simulation time will be measured.</span>
+<span class="sd">    A particular simulation_time moment will then be stored in the log as:</span>
+<span class="sd">    initial_time + simulation_time timeunits. Data can also be reported on by specifying the</span>
+<span class="sd">    corresponding data fields. The names of these data fields must correspond to names of data fields as</span>
+<span class="sd">    they appear in the problem.</span>
+
+<span class="sd">    :param filename: the name of the file in which the event log must be stored.</span>
+<span class="sd">    :param timeunit: the :class:`.TimeUnit` of simulation time.</span>
+<span class="sd">    :param initial_time: a datetime value.</span>
+<span class="sd">    :param time_format: a datetime formatting string.</span>
+<span class="sd">    :param data_fields: the data fields to report in the log.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">timeunit</span><span class="o">=</span><span class="n">TimeUnit</span><span class="o">.</span><span class="n">SECONDS</span><span class="p">,</span> <span class="n">initial_time</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2020</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">time_format</span><span class="o">=</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S.</span><span class="si">%f</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">data_fields</span><span class="o">=</span><span class="p">[]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_start_times</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timeunit</span> <span class="o">=</span> <span class="n">timeunit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initial_time</span> <span class="o">=</span> <span class="n">initial_time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_format</span> <span class="o">=</span> <span class="n">time_format</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_fields</span> <span class="o">=</span> <span class="n">data_fields</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;wt&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;case_id,task,resource,start_time,completion_time&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">df</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_fields</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="EventLogReporterElement.restart"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.EventLogReporterElement.restart">[docs]</a>    <span class="k">def</span> <span class="nf">restart</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="EventLogReporterElement.report"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.EventLogReporterElement.report">[docs]</a>    <span class="k">def</span> <span class="nf">report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">displace</span><span class="p">(</span><span class="n">time</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_time</span> <span class="o">+</span> <span class="p">(</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="n">time</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeunit</span> <span class="o">==</span> <span class="n">TimeUnit</span><span class="o">.</span><span class="n">SECONDS</span> <span class="k">else</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="n">time</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeunit</span> <span class="o">==</span> <span class="n">TimeUnit</span><span class="o">.</span><span class="n">MINUTES</span> <span class="k">else</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="n">time</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeunit</span> <span class="o">==</span> <span class="n">TimeUnit</span><span class="o">.</span><span class="n">HOURS</span> <span class="k">else</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">time</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeunit</span> <span class="o">==</span> <span class="n">TimeUnit</span><span class="o">.</span><span class="n">DAYS</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">event_type</span> <span class="o">==</span> <span class="n">EventType</span><span class="o">.</span><span class="n">START_TASK</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_start_times</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">moment</span>
+        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">event_type</span> <span class="o">==</span> <span class="n">EventType</span><span class="o">.</span><span class="n">COMPLETE_TASK</span> <span class="ow">and</span> <span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_start_times</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">case_id</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;,&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">task_type</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;,&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">resource</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;,&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">displace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">task_start_times</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">id</span><span class="p">])</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_format</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;,&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">displace</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">moment</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_format</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">df</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_fields</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">df</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_start_times</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">id</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="EventLogReporterElement.summarize"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.EventLogReporterElement.summarize">[docs]</a>    <span class="k">def</span> <span class="nf">summarize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="Reporter"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.Reporter">[docs]</a><span class="k">class</span> <span class="nc">Reporter</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A Reporter consists of :class:`.ReporterElement` and reports on the information that is kept by</span>
+<span class="sd">    its elements. Consequently, it does not do much itself, it mainly passes on events to and</span>
+<span class="sd">    received aggregate information from its elements.</span>
+
+<span class="sd">    It receives a :meth:`.Reporter.report` call, each time a simulation event occurs, which it</span>
+<span class="sd">    forwards to its elements to enable them to store information about that event.</span>
+<span class="sd">    It receives a :meth:`.ReporterElement.summarize` call when a simulation run completes. It then</span>
+<span class="sd">    collects the summaries from each of its elements and returns them in one list.</span>
+<span class="sd">    It receives a :meth:`.ReporterElement.restart` call when a simulation run starts, which it</span>
+<span class="sd">    forwards to its elements to enable them to restart.</span>
+
+<span class="sd">    During the specified warmup time, the reporter will ignore all events.</span>
+
+<span class="sd">    :param warmup: a duration in simulation time.</span>
+<span class="sd">    :param reporter_elements: a list of :class:`.ReporterElement` instances, when None are provided,</span>
+<span class="sd">                              creates a reporter with a :class:`.TaskReporterElement` and a :class:`.Case ReporterElement`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">warmup</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">reporter_elements</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">warmup</span> <span class="o">=</span> <span class="n">warmup</span>
+        <span class="k">if</span> <span class="n">reporter_elements</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">default_reporters</span> <span class="o">=</span> <span class="p">[</span><span class="n">TasksReporterElement</span><span class="p">(),</span> <span class="n">CaseReporterElement</span><span class="p">()]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reporters</span> <span class="o">=</span> <span class="n">default_reporters</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reporters</span> <span class="o">=</span> <span class="n">reporter_elements</span>
+
+<div class="viewcode-block" id="Reporter.restart"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.Reporter.restart">[docs]</a>    <span class="k">def</span> <span class="nf">restart</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">reporter</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">reporters</span><span class="p">:</span>
+            <span class="n">reporter</span><span class="o">.</span><span class="n">restart</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Reporter.report"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.Reporter.report">[docs]</a>    <span class="k">def</span> <span class="nf">report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">moment</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">warmup</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">reporter</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">reporters</span><span class="p">:</span>
+                <span class="n">reporter</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">event</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Reporter.summarize"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.Reporter.summarize">[docs]</a>    <span class="k">def</span> <span class="nf">summarize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">reporter</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">reporters</span><span class="p">:</span>
+            <span class="n">summary</span> <span class="o">=</span> <span class="n">reporter</span><span class="o">.</span><span class="n">summarize</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">summary_line</span> <span class="ow">in</span> <span class="n">summary</span><span class="p">:</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">summary_line</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">summary_line</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="Reporter.aggregate"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.Reporter.aggregate">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">aggregate</span><span class="p">(</span><span class="n">summaries</span><span class="p">):</span>
+        <span class="n">aggregation</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">summaries</span><span class="p">:</span>
+            <span class="n">avg</span> <span class="o">=</span> <span class="n">mean</span><span class="p">(</span><span class="n">summaries</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">summaries</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+            <span class="n">ci</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">interval</span><span class="p">(</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">avg</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">st</span><span class="o">.</span><span class="n">sem</span><span class="p">(</span><span class="n">summaries</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
+            <span class="n">aggregation</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">avg</span><span class="p">,</span> <span class="n">avg</span> <span class="o">-</span> <span class="n">ci</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">aggregation</span></div></div>
+
+
+<div class="viewcode-block" id="Simulator"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.Simulator">[docs]</a><span class="k">class</span> <span class="nc">Simulator</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A Simulator simulates a specified :class:`.Problem` using a specified :class:`.Planner`.</span>
+<span class="sd">    The results of the simulation are generated using the specified :class:`.Reporter`.</span>
+<span class="sd">    There are two main entry points into the simulator:</span>
+
+<span class="sd">    * :meth:`.simulate`, which simulates the (single) problem instance passed with the constructor; and</span>
+<span class="sd">    * :meth:`.replicate`, which simulates a collection of problem instances passed via the replicate method itself.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">,</span> <span class="n">reporter</span><span class="p">,</span> <span class="n">planner</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">unassigned_tasks</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The tasks that are currently not assigned. A dict task.id -&gt; task, where task is an instance of :class:`.Task`.</span>
+<span class="sd">        A task is in this list if it must still be performed. After a task is completed does not re-appear in this list.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assigned_tasks</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The tasks that are currently assigned. A dict task.id -&gt; (task, resource, start), where:</span>
+<span class="sd">         </span>
+<span class="sd">        * task is an instance of :class:`.Task`. </span>
+<span class="sd">        * start is the moment in simulation at which the resource will start or has started processing the task.</span>
+<span class="sd">        * resource is the label that identifies a resource in the :class:`.Problem`.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">available_resources</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The set of resources that are currently available. Each resource is a label that identifies a resource in the :class:`.Problem`. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">away_resources</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">away_resources_weights</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The set of resources that are currently away (on a break, home, or working in another process) and consequently not available.</span>
+<span class="sd">        An away resource is a pair (resource, weight), such that the weight is the weight belonging to the resource according to the problem, i.e.:</span>
+<span class="sd">        away_resources_weights[i] == problem.resource_weights[problem.resources.index(away_resources[i])] </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">busy_resources</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The resources that are currently busy. A dict resource -&gt; (task, start), where:</span>
+<span class="sd">        </span>
+<span class="sd">        * task is an instance of :class:`.Task` is the task that the resource is working on.</span>
+<span class="sd">        * start is the moment in simulation time at which the resource started working on the task.</span>
+<span class="sd">          </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">busy_cases</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The cases of which a task is currently being performed or must still be performed. A dict case_id -&gt; [active task_id]</span>
+<span class="sd">        that maps case identifiers for which a task exists to the identifiers of those tasks.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">reserved_resources</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The resources that are currently reserved. A dict resource -&gt; (task, start), where:</span>
+<span class="sd">        </span>
+<span class="sd">        * resource is the label that identifies a resource in the :class:`.Problem`.</span>
+<span class="sd">        * task is an instance of :class:`.Task` is the task on which the resource is expected to work. </span>
+<span class="sd">        * start is the moment in simulation at which the resource starts processing the task.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">now</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The current simulation time.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">reporter</span> <span class="o">=</span> <span class="n">reporter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">planner</span> <span class="o">=</span> <span class="n">planner</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">problem</span> <span class="o">=</span> <span class="n">problem</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_simulation</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Simulator.init_simulation"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.Simulator.init_simulation">[docs]</a>    <span class="k">def</span> <span class="nf">init_simulation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Re-initializes the simulation, such that it can be run again.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># set all resources to available</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">resources</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">available_resources</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+        <span class="c1"># generate resource scheduling event to start the schedule</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">Event</span><span class="p">(</span><span class="n">EventType</span><span class="o">.</span><span class="n">SCHEDULE_RESOURCES</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">)))</span>
+
+        <span class="c1"># reset the problem</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">restart</span><span class="p">()</span>
+
+        <span class="c1"># generate arrival event for the first task of the first case</span>
+        <span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">next_case</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">t</span><span class="p">,</span> <span class="n">Event</span><span class="p">(</span><span class="n">EventType</span><span class="o">.</span><span class="n">CASE_ARRIVAL</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">task</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="Simulator.desired_nr_resources"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.Simulator.desired_nr_resources">[docs]</a>    <span class="k">def</span> <span class="nf">desired_nr_resources</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The number of resources that is currently desired to be working now according to the problem schedule.</span>
+
+<span class="sd">        :return: a number of resources.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">schedule</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">now</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">schedule</span><span class="p">))]</span></div>
+
+<div class="viewcode-block" id="Simulator.working_nr_resources"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.Simulator.working_nr_resources">[docs]</a>    <span class="k">def</span> <span class="nf">working_nr_resources</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The number of resources that is actually on the work floor now, either available, busy or reserved.</span>
+
+<span class="sd">        :return: a number of resources.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">available_resources</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">busy_resources</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reserved_resources</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Simulator.simulate"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.Simulator.simulate">[docs]</a>    <span class="k">def</span> <span class="nf">simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">running_time</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Runs the simulation for the instance that was passed in the constructor.</span>
+<span class="sd">        The simulator generates events (i.e. cases with their associated arrival times, data, and tasks)</span>
+<span class="sd">        as they are produced by the problem instance. The simulator generates a plan event each time a</span>
+<span class="sd">        task or resource becomes available. Events are handled by the reporter.</span>
+
+<span class="sd">        If the target utilization rate is set to a value (a fraction f) other than None, the simulator will ensure that resources</span>
+<span class="sd">        are occupied for approximately the targeted fraction f of the time. It does that by making resources busy with &#39;other</span>
+<span class="sd">        tasks&#39; (i.e. tasks other than the ones of the problem being simulated, like tasks in another process). These &#39;other tasks&#39;</span>
+<span class="sd">        are not specified further and their activity is not logged, but the resources are being kept busy on those tasks.</span>
+
+<span class="sd">        :param running_time: the amount of simulation time the simulation should be run for.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tasks_per</span> <span class="o">=</span> <span class="n">resources_per</span> <span class="o">=</span> <span class="n">nr_per</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># repeat until the end of the simulation time:</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">now</span> <span class="o">&lt;=</span> <span class="n">running_time</span><span class="p">:</span>
+            <span class="c1"># get the first event e from the events</span>
+            <span class="n">event</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="c1"># t = time of e</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">now</span> <span class="o">=</span> <span class="n">event</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">event</span> <span class="o">=</span> <span class="n">event</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reporter</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+
+            <span class="c1"># if e is an arrival event:</span>
+            <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">event_type</span> <span class="o">==</span> <span class="n">EventType</span><span class="o">.</span><span class="n">CASE_ARRIVAL</span><span class="p">:</span>
+                <span class="c1"># add new task</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">unassigned_tasks</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">task</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">reporter</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">Event</span><span class="p">(</span><span class="n">EventType</span><span class="o">.</span><span class="n">TASK_ACTIVATE</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">now</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">busy_cases</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">case_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">now</span><span class="p">,</span> <span class="n">Event</span><span class="p">(</span><span class="n">EventType</span><span class="o">.</span><span class="n">PLAN_TASKS</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">now</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nr_tasks</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unassigned_tasks</span><span class="p">),</span> <span class="n">nr_resources</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">available_resources</span><span class="p">))))</span>
+                <span class="c1"># generate a new arrival event for the first task of the next case</span>
+                <span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">next_case</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">t</span><span class="p">,</span> <span class="n">Event</span><span class="p">(</span><span class="n">EventType</span><span class="o">.</span><span class="n">CASE_ARRIVAL</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">task</span><span class="p">)))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+            <span class="c1"># if e is a start event:</span>
+            <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">event_type</span> <span class="o">==</span> <span class="n">EventType</span><span class="o">.</span><span class="n">START_TASK</span><span class="p">:</span>
+                <span class="c1"># create a complete event for task</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">now</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">processing_time_sample</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">resource</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">t</span><span class="p">,</span> <span class="n">Event</span><span class="p">(</span><span class="n">EventType</span><span class="o">.</span><span class="n">COMPLETE_TASK</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">resource</span><span class="p">)))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">is_event</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">task_type</span><span class="p">):</span>  <span class="c1"># for actual tasks (not events)</span>
+                    <span class="c1"># set resource to busy</span>
+                    <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">reserved_resources</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">resource</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">busy_resources</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">resource</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">now</span><span class="p">)</span>
+
+            <span class="c1"># if e is a complete event:</span>
+            <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">event_type</span> <span class="o">==</span> <span class="n">EventType</span><span class="o">.</span><span class="n">COMPLETE_TASK</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">is_event</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">task_type</span><span class="p">):</span>  <span class="c1"># for actual tasks (not events)</span>
+                    <span class="c1"># set resource to available, if it is still desired, otherwise set it to away</span>
+                    <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">busy_resources</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">resource</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">working_nr_resources</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">desired_nr_resources</span><span class="p">():</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">available_resources</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">resource</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">away_resources</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">resource</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">away_resources_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">resource_weights</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">resource</span><span class="p">)])</span>
+                <span class="c1"># remove task from assigned tasks</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">assigned_tasks</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">busy_cases</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">case_id</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="c1"># notify the tasks as complete to the problem and receive the next tasks</span>
+                <span class="n">next_tasks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">complete_task</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
+                <span class="c1"># generate unassigned tasks for each next task</span>
+                <span class="k">for</span> <span class="n">next_task</span> <span class="ow">in</span> <span class="n">next_tasks</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">unassigned_tasks</span><span class="p">[</span><span class="n">next_task</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">next_task</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">reporter</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">Event</span><span class="p">(</span><span class="n">EventType</span><span class="o">.</span><span class="n">TASK_ACTIVATE</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">now</span><span class="p">,</span> <span class="n">next_task</span><span class="p">))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">busy_cases</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">case_id</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">next_task</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">busy_cases</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">case_id</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">now</span><span class="p">,</span> <span class="n">Event</span><span class="p">(</span><span class="n">EventType</span><span class="o">.</span><span class="n">COMPLETE_CASE</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">now</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="p">)))</span>
+                <span class="c1"># generate a new planning event to start planning now for the newly available resource and next tasks</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">now</span><span class="p">,</span> <span class="n">Event</span><span class="p">(</span><span class="n">EventType</span><span class="o">.</span><span class="n">PLAN_TASKS</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">now</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nr_tasks</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unassigned_tasks</span><span class="p">),</span> <span class="n">nr_resources</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">available_resources</span><span class="p">))))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+            <span class="c1"># if e is a schedule resources event: move resources between available/away,</span>
+            <span class="c1"># depending to how many resources should be available according to the schedule.</span>
+            <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">event_type</span> <span class="o">==</span> <span class="n">EventType</span><span class="o">.</span><span class="n">SCHEDULE_RESOURCES</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">working_nr_resources</span><span class="p">()</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">away_resources</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">resources</span><span class="p">)</span>  <span class="c1"># the number of resources must be constant</span>
+                <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">resources</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">resource_weights</span><span class="p">)</span>  <span class="c1"># each resource must have a resource weight</span>
+                <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">away_resources</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">away_resources_weights</span><span class="p">)</span>  <span class="c1"># each away resource must have a resource weight</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">away_resources</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># for each away resource, the resource weight must be taken from the problem resource weights</span>
+                    <span class="n">i</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">away_resources</span><span class="p">))</span>
+                    <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">away_resources_weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">resource_weights</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">away_resources</span><span class="p">[</span><span class="n">i</span><span class="p">])]</span>
+                <span class="n">required_resources</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">desired_nr_resources</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">working_nr_resources</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">required_resources</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="c1"># if there are not enough resources working</span>
+                    <span class="c1"># randomly select away resources to work, as many as required</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">required_resources</span><span class="p">):</span>
+                        <span class="n">random_resource</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">away_resources</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">away_resources_weights</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="c1"># remove them from away and add them to available resources</span>
+                        <span class="n">away_resource_i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">away_resources</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">random_resource</span><span class="p">)</span>
+                        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">away_resources</span><span class="p">[</span><span class="n">away_resource_i</span><span class="p">]</span>
+                        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">away_resources_weights</span><span class="p">[</span><span class="n">away_resource_i</span><span class="p">]</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">available_resources</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">random_resource</span><span class="p">)</span>
+                    <span class="c1"># generate a new planning event to put them to work</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">now</span><span class="p">,</span> <span class="n">Event</span><span class="p">(</span><span class="n">EventType</span><span class="o">.</span><span class="n">PLAN_TASKS</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">now</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nr_tasks</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unassigned_tasks</span><span class="p">),</span> <span class="n">nr_resources</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">available_resources</span><span class="p">))))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+                <span class="k">elif</span> <span class="n">required_resources</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="c1"># if there are too many resources working</span>
+                    <span class="c1"># remove as many as possible, i.e. min(available_resources, -required_resources)</span>
+                    <span class="n">nr_resources_to_remove</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">available_resources</span><span class="p">),</span> <span class="o">-</span><span class="n">required_resources</span><span class="p">)</span>
+                    <span class="n">resources_to_remove</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">available_resources</span><span class="p">,</span> <span class="n">nr_resources_to_remove</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">resources_to_remove</span><span class="p">:</span>
+                        <span class="c1"># remove them from the available resources</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">available_resources</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+                        <span class="c1"># add them to the away resources</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">away_resources</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">away_resources_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">resource_weights</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">r</span><span class="p">)])</span>
+                <span class="c1"># plan the next resource schedule event</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">now</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">Event</span><span class="p">(</span><span class="n">EventType</span><span class="o">.</span><span class="n">SCHEDULE_RESOURCES</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">now</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">)))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+            <span class="c1"># if e is a planning event: do assignment</span>
+            <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">event_type</span> <span class="o">==</span> <span class="n">EventType</span><span class="o">.</span><span class="n">PLAN_TASKS</span><span class="p">:</span>
+                <span class="c1"># there only is an assignment if there are free resources and tasks</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unassigned_tasks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">available_resources</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">tasks_per</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unassigned_tasks</span><span class="p">)</span>
+                    <span class="n">resources_per</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">available_resources</span><span class="p">)</span>
+                    <span class="n">nr_per</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">assignments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">planner</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+                    <span class="c1"># for each newly assigned task:</span>
+                    <span class="k">for</span> <span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">resource</span><span class="p">,</span> <span class="n">moment</span><span class="p">)</span> <span class="ow">in</span> <span class="n">assignments</span><span class="p">:</span>
+                        <span class="c1"># create start event for task</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">moment</span><span class="p">,</span> <span class="n">Event</span><span class="p">(</span><span class="n">EventType</span><span class="o">.</span><span class="n">START_TASK</span><span class="p">,</span> <span class="n">moment</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">resource</span><span class="p">)))</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">reporter</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">Event</span><span class="p">(</span><span class="n">EventType</span><span class="o">.</span><span class="n">TASK_PLANNED</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">now</span><span class="p">,</span> <span class="n">task</span><span class="p">))</span>
+                        <span class="c1"># assign task</span>
+                        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">unassigned_tasks</span><span class="p">[</span><span class="n">task</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">assigned_tasks</span><span class="p">[</span><span class="n">task</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">resource</span><span class="p">,</span> <span class="n">moment</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">is_event</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">task_type</span><span class="p">):</span>  <span class="c1"># for actual tasks (not events)</span>
+                            <span class="c1"># reserve resource</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">available_resources</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">resource</span><span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">reserved_resources</span><span class="p">[</span><span class="n">resource</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">task</span><span class="p">,</span> <span class="n">moment</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="n">tasks_per</span><span class="o">/</span><span class="n">nr_per</span><span class="p">,</span> <span class="n">resources_per</span><span class="o">/</span><span class="n">nr_per</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Simulator.replicate"><a class="viewcode-back" href="../../bpo.simulator.html#bpo.simulator.Simulator.replicate">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">replicate</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">planner</span><span class="p">,</span> <span class="n">reporter</span><span class="p">,</span> <span class="n">simulation_time</span><span class="p">,</span> <span class="n">replications</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a simulator for each of the problem_instances, using the specified planner and reporter.</span>
+<span class="sd">        Simulates each problem instance by calling the :meth:`.simulate` method on it using the</span>
+<span class="sd">        specified simulation time. Returns the list of summaries generated by the reporter, one summary for</span>
+<span class="sd">        each simulated problem_instance.</span>
+
+<span class="sd">        :param problem: an instance of :class:`.Problem` to simulate.</span>
+<span class="sd">        :param planner: a :class:`.Planner`.</span>
+<span class="sd">        :param reporter: a :class:`.Reporter`.</span>
+<span class="sd">        :param simulation_time: the amount of simulation time for which each problem instance should be simulated.</span>
+<span class="sd">        :param replications: the number of replications to do.</span>
+<span class="sd">        :return: a list of summaries, generated by the reporter, one for each element of problem_instances.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">summaries</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">replications</span><span class="p">):</span>
+            <span class="n">reporter</span><span class="o">.</span><span class="n">restart</span><span class="p">()</span>
+            <span class="n">problem</span><span class="o">.</span><span class="n">restart</span><span class="p">()</span>
+            <span class="n">simulator</span> <span class="o">=</span> <span class="n">Simulator</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">reporter</span><span class="p">,</span> <span class="n">planner</span><span class="p">)</span>
+            <span class="n">simulator</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">simulation_time</span><span class="p">)</span>
+            <span class="n">summary</span> <span class="o">=</span> <span class="n">reporter</span><span class="o">.</span><span class="n">summarize</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">summaries</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">summaries</span> <span class="o">=</span> <span class="n">summary</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">summaries</span><span class="p">:</span>
+                    <span class="n">summaries</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">summary</span><span class="p">:</span>
+                <span class="n">summaries</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">summary</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">summaries</span></div></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation index</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright .
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.
+  </div>
+  
+  </body>
+</html>

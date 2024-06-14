@@ -1,0 +1,323 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>bpo.planners module &#8212; Business Process Optimization  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/readable.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="bpo.predicters module" href="bpo.predicters.html" />
+    <link rel="prev" title="API Documentation" href="api.html" />
+   
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head><body>
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="bpo.predicters.html" title="bpo.predicters module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="API Documentation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Business Process Optimization  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="api.html" accesskey="U">API Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bpo.planners module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bpo.planners">
+<span id="bpo-planners-module"></span><h1>bpo.planners module<a class="headerlink" href="#module-bpo.planners" title="Permalink to this headline">¶</a></h1>
+<p><strong>Classes:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bpo.planners.GreedyPlanner" title="bpo.planners.GreedyPlanner"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GreedyPlanner</span></code></a>()</p></td>
+<td><p>A <a class="reference internal" href="#bpo.planners.Planner" title="bpo.planners.Planner"><code class="xref py py-class docutils literal notranslate"><span class="pre">Planner</span></code></a> that assigns tasks to resources in an anything-goes manner.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bpo.planners.HeuristicPlanner" title="bpo.planners.HeuristicPlanner"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HeuristicPlanner</span></code></a>()</p></td>
+<td><p>A <a class="reference internal" href="#bpo.planners.Planner" title="bpo.planners.Planner"><code class="xref py py-class docutils literal notranslate"><span class="pre">Planner</span></code></a> that takes each task and tries to assign it to the optimal resource.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bpo.planners.ImbalancedPredictivePlanner" title="bpo.planners.ImbalancedPredictivePlanner"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ImbalancedPredictivePlanner</span></code></a>(predicter)</p></td>
+<td><p>Specific planner for the <code class="xref py py-class docutils literal notranslate"><span class="pre">problem.ImbalancedProblem</span></code>, to be used for test purposes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bpo.planners.Planner" title="bpo.planners.Planner"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Planner</span></code></a>()</p></td>
+<td><p>Abstract class that all planners must implement.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bpo.planners.PredictiveHeuristicPlanner" title="bpo.planners.PredictiveHeuristicPlanner"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PredictiveHeuristicPlanner</span></code></a>(predicter, ...)</p></td>
+<td><p>A <a class="reference internal" href="#bpo.planners.Planner" title="bpo.planners.Planner"><code class="xref py py-class docutils literal notranslate"><span class="pre">Planner</span></code></a> that tries to assign a task to the optimal resource.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py class">
+<dt class="sig sig-object py" id="bpo.planners.GreedyPlanner">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bpo.planners.</span></span><span class="sig-name descname"><span class="pre">GreedyPlanner</span></span><a class="reference internal" href="_modules/bpo/planners.html#GreedyPlanner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.planners.GreedyPlanner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bpo.planners.Planner" title="bpo.planners.Planner"><code class="xref py py-class docutils literal notranslate"><span class="pre">bpo.planners.Planner</span></code></a></p>
+<p>A <a class="reference internal" href="#bpo.planners.Planner" title="bpo.planners.Planner"><code class="xref py py-class docutils literal notranslate"><span class="pre">Planner</span></code></a> that assigns tasks to resources in an anything-goes manner.</p>
+<p><strong>Methods:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bpo.planners.GreedyPlanner.assign" title="bpo.planners.GreedyPlanner.assign"><code class="xref py py-obj docutils literal notranslate"><span class="pre">assign</span></code></a>(environment)</p></td>
+<td><p>Assign tasks to resources from the simulation environment.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="bpo.planners.GreedyPlanner.assign">
+<span class="sig-name descname"><span class="pre">assign</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">environment</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bpo/planners.html#GreedyPlanner.assign"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.planners.GreedyPlanner.assign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign tasks to resources from the simulation environment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>environment</strong> – a <a class="reference internal" href="bpo.simulator.html#bpo.simulator.Simulator" title="bpo.simulator.Simulator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Simulator</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>[(task, resource, moment)], where
+task is an instance of <a class="reference internal" href="bpo.problems.html#bpo.problems.Task" title="bpo.problems.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></a>,
+resource is one of <a class="reference internal" href="bpo.problems.html#bpo.problems.Problem.resources" title="bpo.problems.Problem.resources"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Problem.resources</span></code></a>, and
+moment is a number representing the moment in simulation time
+at which the resource must be assigned to the task (typically, this can also be <a class="reference internal" href="bpo.simulator.html#bpo.simulator.Simulator.now" title="bpo.simulator.Simulator.now"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Simulator.now</span></code></a>).</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bpo.planners.HeuristicPlanner">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bpo.planners.</span></span><span class="sig-name descname"><span class="pre">HeuristicPlanner</span></span><a class="reference internal" href="_modules/bpo/planners.html#HeuristicPlanner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.planners.HeuristicPlanner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bpo.planners.Planner" title="bpo.planners.Planner"><code class="xref py py-class docutils literal notranslate"><span class="pre">bpo.planners.Planner</span></code></a></p>
+<p>A <a class="reference internal" href="#bpo.planners.Planner" title="bpo.planners.Planner"><code class="xref py py-class docutils literal notranslate"><span class="pre">Planner</span></code></a> that takes each task and tries to assign it to the optimal resource.
+The optimal resource must be one of <a class="reference internal" href="bpo.problems.html#bpo.problems.Problem.resources" title="bpo.problems.Problem.resources"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Problem.resources</span></code></a> and specified as
+value of the ‘optimal_resource’ of <code class="xref py py-attr docutils literal notranslate"><span class="pre">Task.data</span></code>. If no such resource is
+available, it will assign an arbitrary resource.</p>
+<p><strong>Methods:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bpo.planners.HeuristicPlanner.assign" title="bpo.planners.HeuristicPlanner.assign"><code class="xref py py-obj docutils literal notranslate"><span class="pre">assign</span></code></a>(environment)</p></td>
+<td><p>Assign tasks to resources from the simulation environment.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="bpo.planners.HeuristicPlanner.assign">
+<span class="sig-name descname"><span class="pre">assign</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">environment</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bpo/planners.html#HeuristicPlanner.assign"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.planners.HeuristicPlanner.assign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign tasks to resources from the simulation environment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>environment</strong> – a <a class="reference internal" href="bpo.simulator.html#bpo.simulator.Simulator" title="bpo.simulator.Simulator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Simulator</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>[(task, resource, moment)], where
+task is an instance of <a class="reference internal" href="bpo.problems.html#bpo.problems.Task" title="bpo.problems.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></a>,
+resource is one of <a class="reference internal" href="bpo.problems.html#bpo.problems.Problem.resources" title="bpo.problems.Problem.resources"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Problem.resources</span></code></a>, and
+moment is a number representing the moment in simulation time
+at which the resource must be assigned to the task (typically, this can also be <a class="reference internal" href="bpo.simulator.html#bpo.simulator.Simulator.now" title="bpo.simulator.Simulator.now"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Simulator.now</span></code></a>).</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bpo.planners.ImbalancedPredictivePlanner">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bpo.planners.</span></span><span class="sig-name descname"><span class="pre">ImbalancedPredictivePlanner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predicter</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bpo/planners.html#ImbalancedPredictivePlanner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.planners.ImbalancedPredictivePlanner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bpo.planners.Planner" title="bpo.planners.Planner"><code class="xref py py-class docutils literal notranslate"><span class="pre">bpo.planners.Planner</span></code></a></p>
+<p>Specific planner for the <code class="xref py py-class docutils literal notranslate"><span class="pre">problem.ImbalancedProblem</span></code>, to be used for test purposes.
+A <a class="reference internal" href="#bpo.planners.Planner" title="bpo.planners.Planner"><code class="xref py py-class docutils literal notranslate"><span class="pre">Planner</span></code></a> that tries to assign a task to the optimal resource,
+same as the <a class="reference internal" href="#bpo.planners.HeuristicPlanner" title="bpo.planners.HeuristicPlanner"><code class="xref py py-class docutils literal notranslate"><span class="pre">HeuristicPlanner</span></code></a>, but failing that will predict
+if it is better to wait with the assignment or assign to a suboptimal resource.
+Specifically, if the optimal resource is not available,
+it will make a prediction, using the passed predicter, to check if the optimal
+resource will be ready in time before it becomes better to assign another resource.
+If so, it will not assign the task.</p>
+<p><strong>Methods:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bpo.planners.ImbalancedPredictivePlanner.assign" title="bpo.planners.ImbalancedPredictivePlanner.assign"><code class="xref py py-obj docutils literal notranslate"><span class="pre">assign</span></code></a>(environment)</p></td>
+<td><p>Assign tasks to resources from the simulation environment.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="bpo.planners.ImbalancedPredictivePlanner.assign">
+<span class="sig-name descname"><span class="pre">assign</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">environment</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bpo/planners.html#ImbalancedPredictivePlanner.assign"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.planners.ImbalancedPredictivePlanner.assign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign tasks to resources from the simulation environment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>environment</strong> – a <a class="reference internal" href="bpo.simulator.html#bpo.simulator.Simulator" title="bpo.simulator.Simulator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Simulator</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>[(task, resource, moment)], where
+task is an instance of <a class="reference internal" href="bpo.problems.html#bpo.problems.Task" title="bpo.problems.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></a>,
+resource is one of <a class="reference internal" href="bpo.problems.html#bpo.problems.Problem.resources" title="bpo.problems.Problem.resources"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Problem.resources</span></code></a>, and
+moment is a number representing the moment in simulation time
+at which the resource must be assigned to the task (typically, this can also be <a class="reference internal" href="bpo.simulator.html#bpo.simulator.Simulator.now" title="bpo.simulator.Simulator.now"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Simulator.now</span></code></a>).</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bpo.planners.Planner">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bpo.planners.</span></span><span class="sig-name descname"><span class="pre">Planner</span></span><a class="reference internal" href="_modules/bpo/planners.html#Planner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.planners.Planner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Abstract class that all planners must implement.</p>
+<p><strong>Methods:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bpo.planners.Planner.assign" title="bpo.planners.Planner.assign"><code class="xref py py-obj docutils literal notranslate"><span class="pre">assign</span></code></a>(environment)</p></td>
+<td><p>Assign tasks to resources from the simulation environment.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="bpo.planners.Planner.assign">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">assign</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">environment</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bpo/planners.html#Planner.assign"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.planners.Planner.assign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign tasks to resources from the simulation environment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>environment</strong> – a <a class="reference internal" href="bpo.simulator.html#bpo.simulator.Simulator" title="bpo.simulator.Simulator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Simulator</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>[(task, resource, moment)], where
+task is an instance of <a class="reference internal" href="bpo.problems.html#bpo.problems.Task" title="bpo.problems.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></a>,
+resource is one of <a class="reference internal" href="bpo.problems.html#bpo.problems.Problem.resources" title="bpo.problems.Problem.resources"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Problem.resources</span></code></a>, and
+moment is a number representing the moment in simulation time
+at which the resource must be assigned to the task (typically, this can also be <a class="reference internal" href="bpo.simulator.html#bpo.simulator.Simulator.now" title="bpo.simulator.Simulator.now"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Simulator.now</span></code></a>).</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bpo.planners.PredictiveHeuristicPlanner">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bpo.planners.</span></span><span class="sig-name descname"><span class="pre">PredictiveHeuristicPlanner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predicter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nr_lookahead</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bpo/planners.html#PredictiveHeuristicPlanner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.planners.PredictiveHeuristicPlanner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bpo.planners.Planner" title="bpo.planners.Planner"><code class="xref py py-class docutils literal notranslate"><span class="pre">bpo.planners.Planner</span></code></a></p>
+<p>A <a class="reference internal" href="#bpo.planners.Planner" title="bpo.planners.Planner"><code class="xref py py-class docutils literal notranslate"><span class="pre">Planner</span></code></a> that tries to assign a task to the optimal resource.
+This is the resource that is predicted to have the lowest processing time
+on the task. It takes the list of unassigned tasks and the list of available resources
+and creates the assignment with the lowest processing time (in a greedy manner).
+To avoid starvation of tasks, it only looks in the first nr_lookahead tasks and with
+probability epsilon simply assigns the first task. If nr_lookahead is 0, it looks at all tasks.</p>
+<p><strong>Methods:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bpo.planners.PredictiveHeuristicPlanner.assign" title="bpo.planners.PredictiveHeuristicPlanner.assign"><code class="xref py py-obj docutils literal notranslate"><span class="pre">assign</span></code></a>(environment)</p></td>
+<td><p>Assign tasks to resources from the simulation environment.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="bpo.planners.PredictiveHeuristicPlanner.assign">
+<span class="sig-name descname"><span class="pre">assign</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">environment</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bpo/planners.html#PredictiveHeuristicPlanner.assign"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.planners.PredictiveHeuristicPlanner.assign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign tasks to resources from the simulation environment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>environment</strong> – a <a class="reference internal" href="bpo.simulator.html#bpo.simulator.Simulator" title="bpo.simulator.Simulator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Simulator</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>[(task, resource, moment)], where
+task is an instance of <a class="reference internal" href="bpo.problems.html#bpo.problems.Task" title="bpo.problems.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></a>,
+resource is one of <a class="reference internal" href="bpo.problems.html#bpo.problems.Problem.resources" title="bpo.problems.Problem.resources"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Problem.resources</span></code></a>, and
+moment is a number representing the moment in simulation time
+at which the resource must be assigned to the task (typically, this can also be <a class="reference internal" href="bpo.simulator.html#bpo.simulator.Simulator.now" title="bpo.simulator.Simulator.now"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Simulator.now</span></code></a>).</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation index</a><ul>
+  <li><a href="api.html">API Documentation</a><ul>
+      <li>Previous: <a href="api.html" title="previous chapter">API Documentation</a></li>
+      <li>Next: <a href="bpo.predicters.html" title="next chapter">bpo.predicters module</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bpo.planners.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright .
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.
+  </div>
+  
+  </body>
+</html>

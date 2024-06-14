@@ -1,0 +1,358 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>bpo.predicters module &#8212; Business Process Optimization  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/readable.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="bpo.problems module" href="bpo.problems.html" />
+    <link rel="prev" title="bpo.planners module" href="bpo.planners.html" />
+   
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head><body>
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="bpo.problems.html" title="bpo.problems module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="bpo.planners.html" title="bpo.planners module"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Business Process Optimization  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="api.html" accesskey="U">API Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bpo.predicters module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bpo.predicters">
+<span id="bpo-predicters-module"></span><h1>bpo.predicters module<a class="headerlink" href="#module-bpo.predicters" title="Permalink to this headline">¶</a></h1>
+<p><strong>Classes:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bpo.predicters.ImbalancedPredicter" title="bpo.predicters.ImbalancedPredicter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ImbalancedPredicter</span></code></a>()</p></td>
+<td><p>A <a class="reference internal" href="#bpo.predicters.Predicter" title="bpo.predicters.Predicter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Predicter</span></code></a> that predicts for instances of the <a class="reference internal" href="bpo.problems.html#bpo.problems.ImbalancedProblem" title="bpo.problems.ImbalancedProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImbalancedProblem</span></code></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bpo.predicters.MeanPredicter" title="bpo.predicters.MeanPredicter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MeanPredicter</span></code></a>()</p></td>
+<td><p>A <a class="reference internal" href="#bpo.predicters.Predicter" title="bpo.predicters.Predicter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Predicter</span></code></a> that predicts that the time a resource will take to perform a task is the historical mean.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bpo.predicters.Predicter" title="bpo.predicters.Predicter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Predicter</span></code></a>()</p></td>
+<td><p>Abstract class that all predicters must implement.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py class">
+<dt class="sig sig-object py" id="bpo.predicters.ImbalancedPredicter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bpo.predicters.</span></span><span class="sig-name descname"><span class="pre">ImbalancedPredicter</span></span><a class="reference internal" href="_modules/bpo/predicters.html#ImbalancedPredicter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.predicters.ImbalancedPredicter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bpo.predicters.Predicter" title="bpo.predicters.Predicter"><code class="xref py py-class docutils literal notranslate"><span class="pre">bpo.predicters.Predicter</span></code></a></p>
+<p>A <a class="reference internal" href="#bpo.predicters.Predicter" title="bpo.predicters.Predicter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Predicter</span></code></a> that predicts for instances of the <a class="reference internal" href="bpo.problems.html#bpo.problems.ImbalancedProblem" title="bpo.problems.ImbalancedProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImbalancedProblem</span></code></a>.</p>
+<p><strong>Methods:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bpo.predicters.ImbalancedPredicter.predict_next_task" title="bpo.predicters.ImbalancedPredicter.predict_next_task"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict_next_task</span></code></a>(problem, environment)</p></td>
+<td><p>Predicts the next task that will arrive.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bpo.predicters.ImbalancedPredicter.predict_processing_time_task" title="bpo.predicters.ImbalancedPredicter.predict_processing_time_task"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict_processing_time_task</span></code></a>(problem, ...)</p></td>
+<td><p>Predicts the time it will take a resource to perform a task in a specific problem instance.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bpo.predicters.ImbalancedPredicter.predict_remaining_processing_time" title="bpo.predicters.ImbalancedPredicter.predict_remaining_processing_time"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict_remaining_processing_time</span></code></a>(problem, ...)</p></td>
+<td><p>Predicts the time a resource needs to complete a task that was already started.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="bpo.predicters.ImbalancedPredicter.predict_next_task">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">predict_next_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">environment</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bpo/predicters.html#ImbalancedPredicter.predict_next_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.predicters.ImbalancedPredicter.predict_next_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predicts the next task that will arrive.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>problem</strong> – an instance of a <a class="reference internal" href="bpo.problems.html#bpo.problems.Problem" title="bpo.problems.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Problem</span></code></a>.</p></li>
+<li><p><strong>environment</strong> – an instance of a <a class="reference internal" href="bpo.simulator.html#bpo.simulator.Simulator" title="bpo.simulator.Simulator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Simulator</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a task that represents the most likely task to arrive next.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bpo.predicters.ImbalancedPredicter.predict_processing_time_task">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">predict_processing_time_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resource</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bpo/predicters.html#ImbalancedPredicter.predict_processing_time_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.predicters.ImbalancedPredicter.predict_processing_time_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predicts the time it will take a resource to perform a task in a specific problem instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>problem</strong> – an instance of a <a class="reference internal" href="bpo.problems.html#bpo.problems.Problem" title="bpo.problems.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Problem</span></code></a>.</p></li>
+<li><p><strong>resource</strong> – one of the <a class="reference internal" href="bpo.problems.html#bpo.problems.Problem.resources" title="bpo.problems.Problem.resources"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Problem.resources</span></code></a> of the problem.</p></li>
+<li><p><strong>task</strong> – a <a class="reference internal" href="bpo.problems.html#bpo.problems.Task" title="bpo.problems.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></a> that should come from the problem.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a float representing a duration in simulation time.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bpo.predicters.ImbalancedPredicter.predict_remaining_processing_time">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">predict_remaining_processing_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resource</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">now</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bpo/predicters.html#ImbalancedPredicter.predict_remaining_processing_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.predicters.ImbalancedPredicter.predict_remaining_processing_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predicts the time a resource needs to complete a task that was already started.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>problem</strong> – an instance of a <a class="reference internal" href="bpo.problems.html#bpo.problems.Problem" title="bpo.problems.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Problem</span></code></a>.</p></li>
+<li><p><strong>resource</strong> – one of the <a class="reference internal" href="bpo.problems.html#bpo.problems.Problem.resources" title="bpo.problems.Problem.resources"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Problem.resources</span></code></a> of the problem.</p></li>
+<li><p><strong>task</strong> – a <a class="reference internal" href="bpo.problems.html#bpo.problems.Task" title="bpo.problems.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></a> that should come from the problem.</p></li>
+<li><p><strong>start_time</strong> – the simulation time at which the resource started processing the task.</p></li>
+<li><p><strong>now</strong> – the current simulation time.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a float representing a duration in simulation time.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bpo.predicters.MeanPredicter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bpo.predicters.</span></span><span class="sig-name descname"><span class="pre">MeanPredicter</span></span><a class="reference internal" href="_modules/bpo/predicters.html#MeanPredicter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.predicters.MeanPredicter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bpo.predicters.Predicter" title="bpo.predicters.Predicter"><code class="xref py py-class docutils literal notranslate"><span class="pre">bpo.predicters.Predicter</span></code></a></p>
+<p>A <a class="reference internal" href="#bpo.predicters.Predicter" title="bpo.predicters.Predicter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Predicter</span></code></a> that predicts that the time a resource will take to perform a task
+is the historical mean. Works only for instances of the <a class="reference internal" href="bpo.problems.html#bpo.problems.MinedProblem" title="bpo.problems.MinedProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">problems.MinedProblem</span></code></a>.</p>
+<p><strong>Methods:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bpo.predicters.MeanPredicter.predict_next_task" title="bpo.predicters.MeanPredicter.predict_next_task"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict_next_task</span></code></a>(problem, environment)</p></td>
+<td><p>Predicts the next task that will arrive.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bpo.predicters.MeanPredicter.predict_processing_time_task" title="bpo.predicters.MeanPredicter.predict_processing_time_task"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict_processing_time_task</span></code></a>(problem, ...)</p></td>
+<td><p>Predicts the time it will take a resource to perform a task in a specific problem instance.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bpo.predicters.MeanPredicter.predict_remaining_processing_time" title="bpo.predicters.MeanPredicter.predict_remaining_processing_time"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict_remaining_processing_time</span></code></a>(problem, ...)</p></td>
+<td><p>Predicts the time a resource needs to complete a task that was already started.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="bpo.predicters.MeanPredicter.predict_next_task">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">predict_next_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">environment</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bpo/predicters.html#MeanPredicter.predict_next_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.predicters.MeanPredicter.predict_next_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predicts the next task that will arrive.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>problem</strong> – an instance of a <a class="reference internal" href="bpo.problems.html#bpo.problems.Problem" title="bpo.problems.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Problem</span></code></a>.</p></li>
+<li><p><strong>environment</strong> – an instance of a <a class="reference internal" href="bpo.simulator.html#bpo.simulator.Simulator" title="bpo.simulator.Simulator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Simulator</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a task that represents the most likely task to arrive next.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bpo.predicters.MeanPredicter.predict_processing_time_task">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">predict_processing_time_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resource</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bpo/predicters.html#MeanPredicter.predict_processing_time_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.predicters.MeanPredicter.predict_processing_time_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predicts the time it will take a resource to perform a task in a specific problem instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>problem</strong> – an instance of a <a class="reference internal" href="bpo.problems.html#bpo.problems.Problem" title="bpo.problems.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Problem</span></code></a>.</p></li>
+<li><p><strong>resource</strong> – one of the <a class="reference internal" href="bpo.problems.html#bpo.problems.Problem.resources" title="bpo.problems.Problem.resources"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Problem.resources</span></code></a> of the problem.</p></li>
+<li><p><strong>task</strong> – a <a class="reference internal" href="bpo.problems.html#bpo.problems.Task" title="bpo.problems.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></a> that should come from the problem.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a float representing a duration in simulation time.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bpo.predicters.MeanPredicter.predict_remaining_processing_time">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">predict_remaining_processing_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resource</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">now</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bpo/predicters.html#MeanPredicter.predict_remaining_processing_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.predicters.MeanPredicter.predict_remaining_processing_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predicts the time a resource needs to complete a task that was already started.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>problem</strong> – an instance of a <a class="reference internal" href="bpo.problems.html#bpo.problems.Problem" title="bpo.problems.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Problem</span></code></a>.</p></li>
+<li><p><strong>resource</strong> – one of the <a class="reference internal" href="bpo.problems.html#bpo.problems.Problem.resources" title="bpo.problems.Problem.resources"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Problem.resources</span></code></a> of the problem.</p></li>
+<li><p><strong>task</strong> – a <a class="reference internal" href="bpo.problems.html#bpo.problems.Task" title="bpo.problems.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></a> that should come from the problem.</p></li>
+<li><p><strong>start_time</strong> – the simulation time at which the resource started processing the task.</p></li>
+<li><p><strong>now</strong> – the current simulation time.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a float representing a duration in simulation time.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bpo.predicters.Predicter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bpo.predicters.</span></span><span class="sig-name descname"><span class="pre">Predicter</span></span><a class="reference internal" href="_modules/bpo/predicters.html#Predicter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.predicters.Predicter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Abstract class that all predicters must implement.</p>
+<p><strong>Methods:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bpo.predicters.Predicter.predict_next_task" title="bpo.predicters.Predicter.predict_next_task"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict_next_task</span></code></a>(problem, environment)</p></td>
+<td><p>Predicts the next task that will arrive.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bpo.predicters.Predicter.predict_processing_time_task" title="bpo.predicters.Predicter.predict_processing_time_task"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict_processing_time_task</span></code></a>(problem, ...)</p></td>
+<td><p>Predicts the time it will take a resource to perform a task in a specific problem instance.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bpo.predicters.Predicter.predict_remaining_processing_time" title="bpo.predicters.Predicter.predict_remaining_processing_time"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict_remaining_processing_time</span></code></a>(problem, ...)</p></td>
+<td><p>Predicts the time a resource needs to complete a task that was already started.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="bpo.predicters.Predicter.predict_next_task">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">predict_next_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">environment</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bpo/predicters.html#Predicter.predict_next_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.predicters.Predicter.predict_next_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predicts the next task that will arrive.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>problem</strong> – an instance of a <a class="reference internal" href="bpo.problems.html#bpo.problems.Problem" title="bpo.problems.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Problem</span></code></a>.</p></li>
+<li><p><strong>environment</strong> – an instance of a <a class="reference internal" href="bpo.simulator.html#bpo.simulator.Simulator" title="bpo.simulator.Simulator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Simulator</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a task that represents the most likely task to arrive next.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bpo.predicters.Predicter.predict_processing_time_task">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">predict_processing_time_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resource</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bpo/predicters.html#Predicter.predict_processing_time_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.predicters.Predicter.predict_processing_time_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predicts the time it will take a resource to perform a task in a specific problem instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>problem</strong> – an instance of a <a class="reference internal" href="bpo.problems.html#bpo.problems.Problem" title="bpo.problems.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Problem</span></code></a>.</p></li>
+<li><p><strong>resource</strong> – one of the <a class="reference internal" href="bpo.problems.html#bpo.problems.Problem.resources" title="bpo.problems.Problem.resources"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Problem.resources</span></code></a> of the problem.</p></li>
+<li><p><strong>task</strong> – a <a class="reference internal" href="bpo.problems.html#bpo.problems.Task" title="bpo.problems.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></a> that should come from the problem.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a float representing a duration in simulation time.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bpo.predicters.Predicter.predict_remaining_processing_time">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">predict_remaining_processing_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resource</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">now</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bpo/predicters.html#Predicter.predict_remaining_processing_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bpo.predicters.Predicter.predict_remaining_processing_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predicts the time a resource needs to complete a task that was already started.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>problem</strong> – an instance of a <a class="reference internal" href="bpo.problems.html#bpo.problems.Problem" title="bpo.problems.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Problem</span></code></a>.</p></li>
+<li><p><strong>resource</strong> – one of the <a class="reference internal" href="bpo.problems.html#bpo.problems.Problem.resources" title="bpo.problems.Problem.resources"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Problem.resources</span></code></a> of the problem.</p></li>
+<li><p><strong>task</strong> – a <a class="reference internal" href="bpo.problems.html#bpo.problems.Task" title="bpo.problems.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></a> that should come from the problem.</p></li>
+<li><p><strong>start_time</strong> – the simulation time at which the resource started processing the task.</p></li>
+<li><p><strong>now</strong> – the current simulation time.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a float representing a duration in simulation time.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation index</a><ul>
+  <li><a href="api.html">API Documentation</a><ul>
+      <li>Previous: <a href="bpo.planners.html" title="previous chapter">bpo.planners module</a></li>
+      <li>Next: <a href="bpo.problems.html" title="next chapter">bpo.problems module</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bpo.predicters.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright .
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.
+  </div>
+  
+  </body>
+</html>
