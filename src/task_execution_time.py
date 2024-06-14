@@ -181,7 +181,7 @@ class ExecutionTimeModelPO(ExecutionTimeModel):
         self.predict_cache.pop(case_id)
 
 
-class ExecutionTimeModelBPIC:
+class ExecutionTimeModelBPIC(ExecutionTimeModel):
     def __init__(self):
         super().__init__()
         self._onehot_columns = ['Activity', 'Resource', 'ApplicationType', 'LoanGoal']
@@ -191,7 +191,7 @@ class ExecutionTimeModelBPIC:
     def train(self, resources, task_resource_durations, task_type_occurrences):
         train_df = self.__generate_train_df(task_resource_durations, task_type_occurrences)
         x,y = self._encode_df(resources, train_df)
-        self.train_train_df(train_df)
+        self.train_x_y(x, y)
 
     def __generate_train_df(self, task_resource_durations, task_type_occurrences):
         feature_list = []

@@ -493,6 +493,8 @@ class Simulator:
         
         """
         self.now = 0
+        self.finalized_cases = 0
+        self.total_cycle_time = 0
         """
         The current simulation time.
         """
@@ -682,6 +684,26 @@ class Simulator:
                             self.available_resources.remove(resource)
                             self.reserved_resources[resource] = (event.task, moment)
                 self.events.sort()
+
+            elif event.event_type == EventType.COMPLETE_CASE:
+                self.total_cycle_time += self.now - self.case_start_times[event.task.case_id]
+                self.finalized_cases += 1
+
+
+            unfinished_cases = 0
+            for busy_tasks in self.busy_cases.values():
+                if len(busy_tasks) > 0:
+                    if busy_tasks[0] in self.unassigned_tasks:
+                        busy_case_id = self.unassigned_tasks[busy_tasks[0]].case_id
+                    else:
+                        busy_case_id = self.assigned_tasks[busy_tasks[0]][0].case_id
+                    if busy_case_id in self.case_start_times:
+                        start_time = self.case_start_times[busy_case_id]
+                        if start_time <= running_time:
+                            self.total_cycle_time += running_time - start_time
+                            self.finalized_cases += 1
+                            unfinished_cases += 1
+        return self.total_cycle_time / self.finalized_cases, "COMPLETED: you completed " + str(running_time) + " hours of simulated customer cases. " + str(self.finalized_cases) + " cases started. " + str(self.finalized_cases - unfinished_cases) + " cases run to completion."
 
     @staticmethod
     def replicate(problem, planner, reporter, simulation_time, replications):

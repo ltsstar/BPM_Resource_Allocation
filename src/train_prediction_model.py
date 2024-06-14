@@ -20,7 +20,9 @@ sys.path.append('src/simulator')
 problem = MinedProblem.from_file(problem_file)
 problem.interarrival_time._alpha *= 4.8
 
-prediction_model = ExecutionTimeModelPO()
+prediction_model = ExecutionTimeModelBPIC()
+#prediction_model = ExecutionTimeModelPO()
+
 warm_up_policy = RandomPolicy()
 warm_up_time =  365*24*3
 simulation_time = warm_up_time
@@ -37,7 +39,7 @@ my_planner = Planner(prediction_model,
 simulator = Simulator(problem, Reporter(), my_planner)
 
 
-simulator_result = simulator.simulate(simulation_time+24)
+simulator_result = simulator.simulate(simulation_time+2)
 
 
 
