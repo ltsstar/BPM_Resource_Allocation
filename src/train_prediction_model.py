@@ -13,18 +13,18 @@ import sys
 
 
 #problem_file = "src/simulator/data/BPI Challenge 2017 - clean Jan Jun - problem.pickle"
-problem_file = "src/simulator/data/BPI Challenge 2017 - instance 2.pickle"
+problem_file = "src/simulator/data/BPI Challenge 2017 - instance 3.pickle"
 #problem_file='./data/po_problem.pickle'
 
 sys.path.append('src/simulator')
 problem = MinedProblem.from_file(problem_file)
-problem.interarrival_time._alpha *= 4.8
+#problem.interarrival_time._alpha /= 4.8
 
 prediction_model = ExecutionTimeModelBPIC()
 #prediction_model = ExecutionTimeModelPO()
 
 warm_up_policy = RandomPolicy()
-warm_up_time =  365*24*3
+warm_up_time =  24
 simulation_time = warm_up_time
 activity_names = list(problem.resource_pools.keys())
 #policy = HungarianMultiObjectivePolicy(1, 0, 0, delta)

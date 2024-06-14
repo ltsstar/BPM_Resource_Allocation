@@ -38,12 +38,12 @@ def run_simulator(delta, problem, prediction_model):
                         predict_multiple=True,
                         #hour_timeout=120,
                         debug=True)
-    
+
     reporter = EventLogReporter('./test.csv', [])
 
     simulator = Simulator(problem, reporter, my_planner)
     # only for PO:
-    simulator.problem.interarrival_time._alpha /= 4.8 #reset
+    simulator.problem.interarrival_time._alpha *= 4.8 #reset
 
     policy = ParkPolicy(simulator.problem.next_task_distribution, my_planner.predictor, my_planner.task_type_occurrences)
     my_planner.policy = policy
@@ -60,11 +60,13 @@ def run_simulator(delta, problem, prediction_model):
 
 prediction_model = ExecutionTimeModel()
 #pm_location = 'prediction_model_po.pkl'
-pm_location = 'prediction_model.pkl'
+pm_location = 'prediction_model_bpic.pkl'
 with open(pm_location, 'rb') as file:
     prediction_model = pickle.load(file)
 sys.path.append('src/simulator')
 #problem = MinedProblem.from_file('src/simulator/data/po_problem.pickle')
-problem = MinedProblem.from_file('src/simulator/data/BPI Challenge 2017 - clean Jan Jun - problem.pickle')
+#problem = MinedProblem.from_file('src/simulator/data/BPI Challenge 2017 - clean Jan Jun - problem.pickle')
+problem = MinedProblem.from_file('src/simulator/data/BPI Challenge 2017 - instance 3.pickle')
+#problem = MinedProblem.from_file('src/simulator/data/BPI Challenge 2017 - instance.pickle')
 res = run_simulator(3, problem, prediction_model)
 print(res)

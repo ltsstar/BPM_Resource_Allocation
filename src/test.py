@@ -1,5 +1,6 @@
 import pickle
-from simulator.simulator import Simulator
+from simulator.simulator import Simulator, EventLogReporter
+from simulator.problems import *
 from planner import Planner
 from policy import *
 from ilp_policy import UnrelatedParallelMachinesSchedulingPolicy
@@ -30,7 +31,7 @@ def run_simulator(problem, days, objective, delta, result_queue, selection_strat
     prediction_model = ExecutionTimeModel()
 
     if problem == 'BPIC':
-        with open('prediction_model.pkl', 'rb') as file:
+        with open('prediction_model_bpic.pkl', 'rb') as file:
             prediction_model = pickle.load(file)
     elif problem == 'PO':
         with open('prediction_model_po.pkl', 'rb') as file:
@@ -57,16 +58,23 @@ def run_simulator(problem, days, objective, delta, result_queue, selection_strat
     elif objective == "Random":
         policy = RandomPolicy()
 
+    if problem == 'BPIC':
+        instance_file = 'src/simulator/data/BPI Challenge 2017 - instance.pickle'
+    elif problem == 'PO':
+        instance_file = 'src/simulator/data/po_problem.pickle'
+
+    sys.path.append('src/simulator')
+    problem = MinedProblem.from_file(instance_file)
+
+    activity_names = list(problem.resource_pools.keys())
     my_planner = Planner(prediction_model, warm_up_policy, warm_up_time, policy,
+                        activity_names,
                         predict_multiple=True,
                         hour_timeout=3600,
                         debug=True)
-    if problem == 'BPIC':
-        instance_file = 'data/BPI Challenge 2017 - instance.pickle'
-    elif problem == 'PO':
-        instance_file = 'data/po_problem.pickle'
 
-    simulator = Simulator(my_planner, instance_file)
+    reporter = EventLogReporter('./test.csv', [])
+    simulator = Simulator(problem, reporter, my_planner)
 
     if problem == 'PO':
         # reset arrival time for PO problem:
@@ -78,7 +86,7 @@ def run_simulator(problem, days, objective, delta, result_queue, selection_strat
         policy = ParkPolicy(simulator.problem.next_task_distribution, my_planner.predictor, my_planner.task_type_occurrences)
         my_planner.policy = policy
 
-    simulator_result = simulator.run(simulation_time)
+    simulator_result = simulator.simulate(simulation_time)
     times = (datetime.fromtimestamp(real_start_time).strftime("%Y-%m-%d %H:%M:%S"),
              datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d %H:%M:%S"),
              str(time.time() - real_start_time),
