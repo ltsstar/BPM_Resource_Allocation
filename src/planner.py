@@ -19,9 +19,11 @@ class Planner:
     def __init__(self, prediction_model,
                  warm_up_policy, warm_up_time,
                  policy,
+                 activity_names,
                  predict_multiple = False,
                  hour_timeout = math.inf,
                  debug = False):
+        self.activity_names = activity_names
         self.debug = debug
         self.stop = False # Tell simulator to stop
         self.hour_timeout = hour_timeout

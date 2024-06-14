@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from statistics import mean
 import scipy.stats as st
 import random
+import os
 
 
 class EventType(Enum):
@@ -91,7 +92,10 @@ class Event:
     """
     def __init__(self, event_type, moment, task, resource=None, nr_tasks=0, nr_resources=0):
         self.event_type = event_type
+        self.lifecycle_state = event_type
         self.moment = moment
+        self.timestamp = moment
+        self.case_id = task.case_id if task else None
         self.task = task
         self.resource = resource
         self.nr_tasks = nr_tasks
@@ -375,6 +379,58 @@ class Reporter:
             aggregation[key] = (avg, avg - ci[0])
         return aggregation
 
+class EventLogReporter(Reporter):
+    """
+    This class is used to log the events of the simulation in a CSV file that can be read in a process mining tool.
+    The CSV file has a header with the following columns: case_id, task_id, event_label, resource, start_time, completion_time, data_type1, data_type2, ...
+    The constructor takes two arguments: the filename of the CSV file and a list of data types that will be logged in the CSV file.
+    """
+    def __init__(self, filename, data_types):
+        super().__init__()
+        self.task_start_times = dict()
+        self.data_types = data_types
+        self.initial_time = datetime(2020, 1, 1)
+        self.time_format = "%Y-%m-%d %H:%M:%S.%f"
+
+        dirname = os.path.dirname(filename)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+        self.logfile = open(filename, "wt")
+        self.logfile.write("case_id,task_id,event_label,resource,start_time,completion_time")
+        for data_type in data_types:
+            self.logfile.write("," + data_type)        
+        self.logfile.write("\n")
+
+    def get_formatted_timestamp(self, timestamp):
+         return (self.initial_time + timedelta(hours=timestamp)).strftime(self.time_format)
+
+    def report(self, event):
+        self.callback(event.case_id, event.task, event.moment, event.resource, event.lifecycle_state)
+
+    def callback(self, case_id, element, timestamp, resource, lifecycle_state):
+        if lifecycle_state==EventType.START_TASK:
+            self.task_start_times[(case_id, element.task_type)] = self.get_formatted_timestamp(timestamp)
+        elif lifecycle_state==EventType.COMPLETE_TASK:
+            completion_time = self.get_formatted_timestamp(timestamp)
+            start_time = self.task_start_times[(case_id, element.task_type)]
+            del self.task_start_times[(case_id, element.task_type)]
+
+            self.logfile.write(str(case_id) + ",")
+            self.logfile.write(str(element.id) + ",")
+            self.logfile.write(element.task_type + ",")
+            self.logfile.write(str(resource) + ",")
+            self.logfile.write(start_time + ",")
+            self.logfile.write(completion_time)
+            for data_type in self.data_types:
+                if data_type in element.data:
+                    self.logfile.write("," + str(element.data[data_type]))
+                else:
+                    self.logfile.write(",")
+            self.logfile.write("\n")
+            self.logfile.flush()
+
+    def close(self):
+        self.logfile.close()
 
 class Simulator:
     """
@@ -444,6 +500,7 @@ class Simulator:
         self.reporter = reporter
         self.planner = planner
         self.problem = problem
+        self.case_start_times = dict()
 
         self.init_simulation()
 
@@ -510,6 +567,10 @@ class Simulator:
             if event.event_type == EventType.CASE_ARRIVAL:
                 # add new task
                 self.unassigned_tasks[event.task.id] = event.task
+                self.case_start_times[event.task.case_id] = self.now
+                self.planner.report(Event(EventType.CASE_ARRIVAL, self.now, event.task))
+                self.planner.report(Event(EventType.TASK_ACTIVATE, self.now, event.task))
+                self.reporter.report(Event(EventType.CASE_ARRIVAL, self.now, event.task))
                 self.reporter.report(Event(EventType.TASK_ACTIVATE, self.now, event.task))
                 self.busy_cases[event.task.case_id] = [event.task.id]
                 self.events.append((self.now, Event(EventType.PLAN_TASKS, self.now, None, nr_tasks=len(self.unassigned_tasks), nr_resources=len(self.available_resources))))
@@ -520,6 +581,7 @@ class Simulator:
 
             # if e is a start event:
             elif event.event_type == EventType.START_TASK:
+                self.planner.report(Event(EventType.START_TASK, t, event.task, event.resource))
                 # create a complete event for task
                 t = self.now + self.problem.processing_time_sample(event.resource, event.task)
                 self.events.append((t, Event(EventType.COMPLETE_TASK, t, event.task, event.resource)))
@@ -531,6 +593,7 @@ class Simulator:
 
             # if e is a complete event:
             elif event.event_type == EventType.COMPLETE_TASK:
+                self.planner.report(Event(EventType.COMPLETE_TASK, t, event.task, event.resource))
                 if not self.problem.is_event(event.task.task_type):  # for actual tasks (not events)
                     # set resource to available, if it is still desired, otherwise set it to away
                     del self.busy_resources[event.resource]
@@ -548,9 +611,11 @@ class Simulator:
                 # generate unassigned tasks for each next task
                 for next_task in next_tasks:
                     self.unassigned_tasks[next_task.id] = next_task
+                    self.planner.report(Event(EventType.TASK_ACTIVATE, self.now, next_task))
                     self.reporter.report(Event(EventType.TASK_ACTIVATE, self.now, next_task))
                     self.busy_cases[event.task.case_id].append(next_task.id)
                 if len(self.busy_cases[event.task.case_id]) == 0:
+                    self.planner.report(Event(EventType.COMPLETE_CASE, self.now, event.task))
                     self.events.append((self.now, Event(EventType.COMPLETE_CASE, self.now, event.task)))
                 # generate a new planning event to start planning now for the newly available resource and next tasks
                 self.events.append((self.now, Event(EventType.PLAN_TASKS, self.now, None, nr_tasks=len(self.unassigned_tasks), nr_resources=len(self.available_resources))))
@@ -598,25 +663,25 @@ class Simulator:
 
             # if e is a planning event: do assignment
             elif event.event_type == EventType.PLAN_TASKS:
-                # there only is an assignment if there are free resources and tasks
                 if len(self.unassigned_tasks) > 0 and len(self.available_resources) > 0:
-                    tasks_per += len(self.unassigned_tasks)
-                    resources_per += len(self.available_resources)
-                    nr_per += 1
-                    assignments = self.planner.assign(self)
-                    # for each newly assigned task:
-                    for (task, resource, moment) in assignments:
-                        # create start event for task
+                    assignments = self.planner.plan(set(self.available_resources),
+                                                    list(self.unassigned_tasks.values()),
+                                                    self.problem.resource_pools)
+                    moment = self.now
+                    for (task, resource) in assignments:
+                        if task not in self.unassigned_tasks.values():
+                            return None, "ERROR: trying to assign a task that is not in the unassigned_tasks."
+                        if resource not in self.available_resources:
+                            return None, "ERROR: trying to assign a resource that is not in available_resources."
+                        if resource not in self.problem.resource_pools[task.task_type]:
+                            return None, "ERROR: trying to assign a resource to a task that is not in its resource pool."
                         self.events.append((moment, Event(EventType.START_TASK, moment, task, resource)))
-                        self.reporter.report(Event(EventType.TASK_PLANNED, self.now, task))
-                        # assign task
                         del self.unassigned_tasks[task.id]
                         self.assigned_tasks[task.id] = (task, resource, moment)
-                        if not self.problem.is_event(task.task_type):  # for actual tasks (not events)
-                            # reserve resource
+                        if not self.problem.is_event(task.task_type):
                             self.available_resources.remove(resource)
                             self.reserved_resources[resource] = (event.task, moment)
-                    self.events.sort()
+                self.events.sort()
 
     @staticmethod
     def replicate(problem, planner, reporter, simulation_time, replications):
