@@ -583,7 +583,7 @@ class Simulator:
 
             # if e is a start event:
             elif event.event_type == EventType.START_TASK:
-                self.planner.report(Event(EventType.START_TASK, t, event.task, event.resource))
+                self.planner.report(Event(EventType.START_TASK, self.now, event.task, event.resource))
                 # create a complete event for task
                 t = self.now + self.problem.processing_time_sample(event.resource, event.task)
                 self.events.append((t, Event(EventType.COMPLETE_TASK, t, event.task, event.resource)))
@@ -595,7 +595,7 @@ class Simulator:
 
             # if e is a complete event:
             elif event.event_type == EventType.COMPLETE_TASK:
-                self.planner.report(Event(EventType.COMPLETE_TASK, t, event.task, event.resource))
+                self.planner.report(Event(EventType.COMPLETE_TASK, self.now, event.task, event.resource))
                 if not self.problem.is_event(event.task.task_type):  # for actual tasks (not events)
                     # set resource to available, if it is still desired, otherwise set it to away
                     del self.busy_resources[event.resource]
